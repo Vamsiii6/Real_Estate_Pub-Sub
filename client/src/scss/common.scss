@@ -1,0 +1,38 @@
+.property-management-home {
+  .hyper-link-1 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #f3f4f6;
+    cursor: pointer;
+    &.is-active {
+      color: #f6b43b;
+    }
+    &:hover {
+      color: #f6573b;
+    }
+  }
+}
+.heading-1 {
+  font-weight: bold;
+  font-size: 25px;
+}
+.prop-container {
+  height: 18rem;
+  width: 20rem;
+  background-color: #fff;
+}
+.prop-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #111;
+}
+.price-tag {
+  padding: 5px;
+  border-radius: 3px;
+  background-color: #eaedfd;
+  .price-text {
+    font-size: 16px;
+    text-align: center;
+    color: #2a41e8;
+  }
+}
