@@ -4,20 +4,23 @@ services:
     platform: linux/x86_64
     image: mysql:5.7
     ports:
-      - "4004:3306"
+      - "3003:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
     volumes:
       - ./server/db:/docker-entrypoint-initdb.d/:ro
   server:
     build: ./server
-    links:
+    depends_on:
       - db
     ports:
       - "5000:5000"
+    restart: unless-stopped
+    command: ["flask", "run", "--host=0.0.0.0"]
   client:
     build: ./client
     links:
       - server
     ports:
       - "8080:8080"
+    command: ["npm", "run", "serve"]
