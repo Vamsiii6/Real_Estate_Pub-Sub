@@ -5,9 +5,10 @@ from flask_cors import CORS
 import mysql.connector
 app = Flask(__name__)
 CORS(app)
-con = mysql.connector.connect(host="localhost", user="root", password="Aashiq123@", database="ds_project1")
+config = {"host": "db", "user": "root", "password": "root", "database": "ds_project1", "port": "3306"}
+con = mysql.connector.connect(**config)
 
-@app.route("/getAllProperty", methods=["GET"])
+@app.route("/api/getAllProperty", methods=["GET"])
 def getAllProperty():
     cur = con.cursor()
     cur.execute("select * from property")
@@ -22,7 +23,7 @@ def getAllProperty():
         allrecords.append(formatted_record)
     return {"records":allrecords}
 
-@app.route("/addNewProperty", methods=["POST"])
+@app.route("/api/addNewProperty", methods=["POST"])
 def createNewProperty():
     cur = con.cursor()
     input_json = request.get_json(force=True)
@@ -32,4 +33,3 @@ def createNewProperty():
     con.commit()
     cur.close()
     return property
-

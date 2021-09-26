@@ -43,7 +43,7 @@
   </div>
 </template>
 <script>
-import axios from "axios";
+import http from "@/http";
 export default {
   data: () => ({
     formModel: {
@@ -74,10 +74,9 @@ export default {
       let valid = await this.$refs["property-form"].validate();
       if (valid) {
         try {
-          let response = await axios.post(
-            "http://localhost:5000/addNewProperty",
-            { property: propertyModel }
-          );
+          let response = await http.post("/addNewProperty", {
+            property: propertyModel,
+          });
           if (response) {
             this.routeToPropertyList();
           }

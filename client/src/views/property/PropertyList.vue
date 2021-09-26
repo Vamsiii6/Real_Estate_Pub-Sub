@@ -62,7 +62,7 @@
   </div>
 </template>
 <script>
-import axios from "axios";
+import http from "@/http";
 export default {
   data: () => ({
     allProperty: [],
@@ -78,7 +78,7 @@ export default {
     async getAllPropertyRecord() {
       try {
         this.loading = true;
-        let response = await axios.get("http://localhost:5000/getAllProperty");
+        let response = await http.get("/getAllProperty");
         this.allProperty = response?.data?.records;
         this.loading = false;
       } catch (error) {

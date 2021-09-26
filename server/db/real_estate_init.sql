@@ -1,3 +1,5 @@
+CREATE DATABASE ds_project1;
+USE ds_project1;
 CREATE TABLE `users` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255),
