@@ -3,11 +3,13 @@ from flask import Flask, request
 from flask_cors import CORS
 
 import mysql.connector
+
 app = Flask(__name__)
 CORS(app)
 config = {"host": "db", "user": "root", "password": "root", "database": "ds_project1", "port": "3306"}
 con = mysql.connector.connect(**config)
 
+## Return the list of all properties data from the Property table
 @app.route("/api/getAllProperty", methods=["GET"])
 def getAllProperty():
     cur = con.cursor()
@@ -23,6 +25,7 @@ def getAllProperty():
         allrecords.append(formatted_record)
     return {"records":allrecords}
 
+## Adds new entry to the Property table in the database
 @app.route("/api/addNewProperty", methods=["POST"])
 def createNewProperty():
     cur = con.cursor()

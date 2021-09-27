@@ -44,7 +44,7 @@
         <div class="flex justify-center items-center">
           <img src="./real-estate-no-data.svg" class="h-3/6 w-3/6" />
         </div>
-        <div class="p-2">
+        <div class="p-5">
           <div class="prop-title flex flex-row justify-between">
             <div class="w-9/12 truncate">
               {{ property.name }}
