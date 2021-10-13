@@ -46,6 +46,11 @@ export default {
       roles: [],
     },
   }),
+  created() {
+    if (this.$cookie.get('authToken')) {
+      this.redirectToHomePage()
+    }
+  },
   methods: {
     async signupUserWithFirebase() {
       try {
@@ -88,6 +93,10 @@ export default {
       } catch (error) {
         this.$message.error(error)
       }
+    },
+
+    redirectToHomePage() {
+      this.$router.push({ name: 'PropertyList' })
     },
   },
 }

@@ -17,13 +17,10 @@ export default {
   data: () => ({
     email: null,
     password: null,
-    loading: true,
   }),
   created() {
     if (this.$cookie.get('authToken')) {
       this.redirectToHomePage()
-    } else {
-      this.loading = false
     }
   },
   methods: {
