@@ -7,6 +7,8 @@ import firebase_admin
 from functools import wraps
 from firebase_admin import credentials, auth
 import pymysql.cursors
+import threading
+import time
 
 
 # Firebase Instantiation
@@ -27,6 +29,18 @@ mysql_db = os.getenv('DB_NAME')
 mysql_host = os.getenv('DB_NAME')
 connection = pymysql.connect(host="localhost", user="root", password="root", database="ds_project1", port=3306,
                              cursorclass=pymysql.cursors.DictCursor)
+
+
+
+class brokerThread(threading.Thread):
+    def __init__(self, name):
+        threading.Thread.__init__(self)
+        self.name = name
+    def run(self):
+        time.sleep(10)
+        print(f"print args in thread {self.name}")
+
+
 
 # Decorator for API Auth validation
 # using Firebase auth Manager
@@ -73,4 +87,11 @@ def createNewProperty():
         q = MySQLQuery.into(properties).columns('name', 'description', 'price').insert(insert_val)
         cursor.execute(q.get_sql())
     connection.commit()
+    broker_thread = brokerThread("ds-broker")
+    broker_thread.start()
+
     return input_vals
+
+
+
+
