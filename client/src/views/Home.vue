@@ -48,12 +48,20 @@
 
 <script>
 import helper from 'src/mixins/helper'
+import io from 'socket.io-client'
+
 export default {
   name: 'Home',
   created() {
-    if (!this.$cookie.get('authToken')) {
+    if (this.$cookie && !this.$cookie.get('authToken')) {
       this.$router.push({ name: 'LoginPage' })
     }
+    const socket = io('http://localhost:5000/')
+    console.log('Outside')
+    socket.on('testing-event', (...args) => {
+      console.log('Inside event', args)
+    })
+    socket.emit('client-event', { aashiq: 'Hello' })
   },
   methods: {
     routeToList() {

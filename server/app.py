@@ -2,14 +2,14 @@ from flask import Flask, request, abort
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
-from pypika import Table, MySQLQuery, Field, Parameter
+from pypika import Table, MySQLQuery
 import firebase_admin
 from functools import wraps
 from firebase_admin import credentials, auth
 import pymysql.cursors
 import threading
 import time
-
+from flask_socketio import SocketIO, emit, send
 
 # Firebase Instantiation
 cred = credentials.Certificate("ds-project1-186c7-firebase-adminsdk-vqoyz-b5e74dceac.json")
@@ -22,6 +22,10 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+# Web socket Initialization
+socketio = SocketIO(app, cors_allowed_origins='*')
+socketio.run(app)
+
 # Connect to MySQL
 mysql_password = os.getenv('SQL_PASSWORD')
 mysql_user = os.getenv('SQL_USER')
@@ -31,19 +35,20 @@ connection = pymysql.connect(host="localhost", user="root", password="root", dat
                              cursorclass=pymysql.cursors.DictCursor)
 
 
-
+# Sample Broker thread
 class brokerThread(threading.Thread):
     def __init__(self, name):
         threading.Thread.__init__(self)
         self.name = name
+
     def run(self):
         time.sleep(10)
+        # Web socket event to client
+        socketio.emit('testing-event', {'data': 'foobar'})
         print(f"print args in thread {self.name}")
 
 
-
-# Decorator for API Auth validation
-# using Firebase auth Manager
+# Decorator for API Auth validation using Firebase auth Manager
 def login_required(f):
     @wraps(f)
     def validate_token(*args, **kwargs):
@@ -64,8 +69,6 @@ def login_required(f):
     return validate_token
 
 
-
-
 # Return the list of all properties data from the Property table
 @app.route("/api/getAllProperty", methods=["GET"])
 @login_required
@@ -76,7 +79,7 @@ def getAllProperty():
     return {"records": results}
 
 
-## Adds new entry to the Property table in the database
+# Adds new entry to the Property table in the database
 @app.route("/api/addNewProperty", methods=["POST"])
 def createNewProperty():
     with connection.cursor() as cursor:
@@ -92,6 +95,7 @@ def createNewProperty():
 
     return input_vals
 
-
-
-
+# Websocket event from Client
+@socketio.on('client-event')
+def handle_my_custom_event(data):
+    print(f"Client Event {data}")
