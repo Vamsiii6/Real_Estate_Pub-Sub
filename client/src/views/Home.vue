@@ -28,6 +28,7 @@
       >
         Form
       </div>
+      <div>Logout</div>
     </div>
     <div class="h-5/6 bg-blue-50 p-10 overflow-y-scroll">
       <router-view />
@@ -37,14 +38,14 @@
 
 <script>
 export default {
-  name: "Home",
+  name: 'Home',
   methods: {
     routeToList() {
-      this.$router.push({ name: "PropertyList" });
+      this.$router.push({ name: 'PropertyList' })
     },
     routeToForm() {
-      this.$router.push({ name: "PropertyForm" });
+      this.$router.push({ name: 'PropertyForm' })
     },
   },
-};
+}
 </script>

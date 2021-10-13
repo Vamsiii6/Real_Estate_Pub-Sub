@@ -22,7 +22,11 @@
       class="flex flex-col justify-center items-center h-full"
     >
       <div class="flex flex-col justify-center items-center">
-        <img src="./real-estate-no-data.svg" class="h-40 w-40" />
+        <InlineSvg
+          src="real-estate-no-data"
+          iconClass="icon size-100"
+          class="h-40 w-40"
+        />
         No Properties found
       </div>
       <div class="mt-5">
@@ -42,7 +46,11 @@
         class="prop-container flex flex-col"
       >
         <div class="flex justify-center items-center">
-          <img src="./real-estate-no-data.svg" class="h-3/6 w-3/6" />
+          <InlineSvg
+            src="real-estate-no-data"
+            iconClass="icon size-100"
+            class="h-3/6 w-3/6"
+          />
         </div>
         <div class="p-5">
           <div class="prop-title flex flex-row justify-between">
@@ -62,29 +70,29 @@
   </div>
 </template>
 <script>
-import http from "@/http";
+import http from '@/http'
 export default {
   data: () => ({
     allProperty: [],
     loading: true,
   }),
   mounted() {
-    this.getAllPropertyRecord();
+    this.getAllPropertyRecord()
   },
   methods: {
     routeToForm() {
-      this.$router.push({ name: "PropertyForm" });
+      this.$router.push({ name: 'PropertyForm' })
     },
     async getAllPropertyRecord() {
       try {
-        this.loading = true;
-        let response = await http.get("/getAllProperty");
-        this.allProperty = response?.data?.records;
-        this.loading = false;
+        this.loading = true
+        let response = await http.get('/getAllProperty')
+        this.allProperty = response?.data?.records
+        this.loading = false
       } catch (error) {
-        this.$message.error("Server Error");
+        this.$message.error('Server Error')
       }
     },
   },
-};
+}
 </script>

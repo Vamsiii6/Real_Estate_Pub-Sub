@@ -43,7 +43,7 @@
   </div>
 </template>
 <script>
-import http from "@/http";
+import http from '@/http'
 export default {
   data: () => ({
     formModel: {
@@ -52,42 +52,42 @@ export default {
       price: null,
     },
     formRules: {
-      name: [{ required: true, message: "Please input name", trigger: "blur" }],
+      name: [{ required: true, message: 'Please input name', trigger: 'blur' }],
       price: [
-        { required: true, message: "Please input price", trigger: "blur" },
+        { required: true, message: 'Please input price', trigger: 'blur' },
       ],
       description: [
         {
           required: true,
-          message: "Please input description",
-          trigger: "blur",
+          message: 'Please input description',
+          trigger: 'blur',
         },
       ],
     },
   }),
   methods: {
     routeToPropertyList() {
-      this.$router.push({ name: "PropertyList" });
+      this.$router.push({ name: 'PropertyList' })
     },
     async saveForm() {
-      let propertyModel = this.$_.clone(this.formModel);
-      let valid = await this.$refs["property-form"].validate();
+      let propertyModel = this.$_.clone(this.formModel)
+      let valid = await this.$refs['property-form'].validate()
       if (valid) {
         try {
-          let response = await http.post("/addNewProperty", {
-            property: propertyModel,
-          });
+          let response = await http.post('/addNewProperty', {
+            properties: propertyModel,
+          })
           if (response) {
-            this.routeToPropertyList();
+            this.routeToPropertyList()
           }
         } catch (error) {
-          this.$message.error("Server Error");
+          this.$message.error('Server Error')
         }
       } else {
-        this.$message.error("Error Occurred");
-        return false;
+        this.$message.error('Error Occurred')
+        return false
       }
     },
   },
-};
+}
 </script>

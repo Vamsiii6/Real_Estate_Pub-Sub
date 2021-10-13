@@ -6,11 +6,11 @@
 <script>
 export default {
   created() {
-    if (this.$route.name === "Home") {
-      this.$router.push({ name: "PropertyList" });
+    if (this.$route.name === 'Home') {
+      this.$router.push({ name: 'PropertyList' })
     }
   },
-};
+}
 </script>
 <style lang="scss">
 #app {
@@ -18,9 +18,5 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
 }
 </style>

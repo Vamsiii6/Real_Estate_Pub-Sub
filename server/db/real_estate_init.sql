@@ -5,11 +5,11 @@ CREATE TABLE `users` (
   `name` varchar(255),
   `email` varchar(255),
   `phone` varchar(255),
-  `password` varchar(255),
+  `roles` varchar(255),
   `created_at` timestamp
 );
 
-CREATE TABLE `property` (
+CREATE TABLE `properties` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255),
   `description` varchar(255),
