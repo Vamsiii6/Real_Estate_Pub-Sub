@@ -15,6 +15,10 @@ services:
       - db
     ports:
       - "5000:5000"
+    environment:
+      FLASK_DEBUG: 1
+      FLASK_APP: ./app.py
+    volumes: ["./server:/app"]
     restart: unless-stopped
     command: ["flask", "run", "--host=0.0.0.0"]
   client:
@@ -23,4 +27,6 @@ services:
       - server
     ports:
       - "8080:8080"
+    volumes:
+      - ./client:/src
     command: ["npm", "run", "serve"]

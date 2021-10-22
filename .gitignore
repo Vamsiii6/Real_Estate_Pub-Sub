@@ -1,6 +1,5 @@
 client/node_modules
 client/dist
-server/.idea
-client/.DS_Store
-server/.DS_Store
-.DS_Store
+**/.idea
+**/.DS_Store
+**/__pycache__

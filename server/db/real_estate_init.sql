@@ -6,6 +6,7 @@ CREATE TABLE `users` (
   `email` varchar(255),
   `phone` varchar(255),
   `roles` varchar(255),
+  `uid` varchar(255),
   `created_at` timestamp
 );
 
@@ -14,15 +15,21 @@ CREATE TABLE `properties` (
   `name` varchar(255),
   `description` varchar(255),
   `price` bigint,
-  `location` bigint,
+  `city_id` bigint,
+  `room_type_id` bigint,
   `add_info` bigint,
-  `created_by` bigint,
+  `created_by` varchar(255),
   `created_at` timestamp
 );
 
 CREATE TABLE `cities` (
   `id` int PRIMARY KEY,
   `name` varchar(255)
+);
+
+CREATE TABLE `room_type` (
+  `id` int PRIMARY KEY,
+  `type` varchar(255)
 );
 
 CREATE TABLE `location` (
@@ -36,6 +43,11 @@ CREATE TABLE `location` (
 );
 
 CREATE TABLE `user_cities_rel` (
-  `user_id` bigint,
+  `uid` bigint,
   `city_id` bigint
+);
+
+CREATE TABLE `user_room_types_rel` (
+  `uid` bigint,
+  `room_type_id` bigint
 );

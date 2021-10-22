@@ -43,7 +43,6 @@
   </div>
 </template>
 <script>
-import http from '@/http'
 export default {
   data: () => ({
     formModel: {
@@ -74,7 +73,7 @@ export default {
       let valid = await this.$refs['property-form'].validate()
       if (valid) {
         try {
-          let response = await http.post('/addNewProperty', {
+          let response = await this.$axios.post('/addNewProperty', {
             properties: propertyModel,
           })
           if (response) {

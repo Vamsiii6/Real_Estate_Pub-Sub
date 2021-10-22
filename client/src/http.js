@@ -29,7 +29,7 @@ http.interceptors.response.use(
   (error) => {
     // Unauthorized
     if (error.response.status === 401) {
-      helper.reFetchToken()
+      helper.authLogout()
     }
   }
 )

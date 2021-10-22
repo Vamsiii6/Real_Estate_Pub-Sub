@@ -9,11 +9,13 @@ from firebase_admin import credentials, auth
 import pymysql.cursors
 import threading
 import time
-from flask_socketio import SocketIO, emit, send
+from flask_socketio import SocketIO
 
 # Firebase Instantiation
-cred = credentials.Certificate("ds-project1-186c7-firebase-adminsdk-vqoyz-b5e74dceac.json")
-firebase_admin.initialize_app(cred)
+if not firebase_admin._apps:
+    cred = credentials.Certificate(
+        "ds-project1-186c7-firebase-adminsdk-vqoyz-b5e74dceac.json")
+    firebase_admin.initialize_app(cred)
 
 # ENV Variables
 load_dotenv()
@@ -31,8 +33,9 @@ mysql_password = os.getenv('SQL_PASSWORD')
 mysql_user = os.getenv('SQL_USER')
 mysql_db = os.getenv('DB_NAME')
 mysql_host = os.getenv('DB_NAME')
-connection = pymysql.connect(host="localhost", user="root", password="root", database="ds_project1", port=3306,
+connection = pymysql.connect(host="db", user="root", password="root", database="ds_project1", port=3306,
                              cursorclass=pymysql.cursors.DictCursor)
+app.config['PROPAGATE_EXCEPTIONS'] = False
 
 
 # Sample Broker thread
@@ -65,35 +68,73 @@ def login_required(f):
             else:
                 abort(500)
         return f(*args, **kwargs)
-
     return validate_token
 
 
 # Return the list of all properties data from the Property table
 @app.route("/api/getAllProperty", methods=["GET"])
 @login_required
-def getAllProperty():
+def fetchAllProperty():
     with connection.cursor() as cursor:
-        cursor.execute("select * from properties")
+        q = MySQLQuery.from_('properties').select(
+            'id', 'name', 'description', 'price')
+        cursor.execute(q.get_sql())
         results = cursor.fetchall()
     return {"records": results}
 
 
 # Adds new entry to the Property table in the database
 @app.route("/api/addNewProperty", methods=["POST"])
+@login_required
 def createNewProperty():
     with connection.cursor() as cursor:
         input_json = request.get_json(force=True)
         properties = Table('properties')
         input_vals = input_json['properties']
-        insert_val = (input_vals['name'], input_vals['description'], input_vals['price'])
-        q = MySQLQuery.into(properties).columns('name', 'description', 'price').insert(insert_val)
+        insert_val = (input_vals['name'],
+                      input_vals['description'], input_vals['price'])
+        q = MySQLQuery.into(properties).columns(
+            'name', 'description', 'price').insert(insert_val)
         cursor.execute(q.get_sql())
     connection.commit()
     broker_thread = brokerThread("ds-broker")
     broker_thread.start()
 
     return input_vals
+
+# Adds new entry to the User table
+
+
+@app.route("/api/addNewUser", methods=["POST"])
+def createNewUser():
+    with connection.cursor() as cursor:
+        input_json = request.get_json(force=True)
+        users_table = Table('users')
+        input_vals = input_json['userDetails']
+        insert_val = (input_vals['name'], input_vals['email'],
+                      input_vals['phone'], input_vals['roles'], input_vals['uid'])
+        q = MySQLQuery.into(users_table).columns(
+            'name', 'email', 'phone', 'roles', 'uid').insert(insert_val)
+        cursor.execute(q.get_sql())
+    connection.commit()
+    return input_vals
+
+# Fetch User Details
+
+
+@app.route("/api/getUserDetail", methods=["POST"])
+@login_required
+def fetchUserDetail():
+    with connection.cursor() as cursor:
+        input_json = request.get_json(force=True)
+        uid_ = input_json['uid']
+        users_table = Table('users')
+        q = MySQLQuery.from_('users').select(
+            'name', 'email', 'phone', 'roles', 'uid').where(users_table.uid == uid_)
+        cursor.execute(q.get_sql())
+        results = cursor.fetchone()
+    return {"userDetails": results}
+
 
 # Websocket event from Client
 @socketio.on('client-event')

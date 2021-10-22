@@ -1,14 +1,16 @@
 .property-management-home {
   .hyper-link-1 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     color: #f3f4f6;
     cursor: pointer;
     &.is-active {
       color: #f6b43b;
     }
-    &:hover {
-      color: #f6573b;
+    &.hover-effect {
+      &:hover {
+        color: #f6573b;
+      }
     }
   }
 }
@@ -58,4 +60,62 @@ svg.icon {
     height: 60px;
     width: 30px;
   }
+}
+
+.title-bold {
+  font-size: 26px;
+  color: #333333;
+}
+.login-page {
+  height: 100vh;
+  .login-container {
+    padding: 50px;
+    background: #fff;
+    border-radius: 10px;
+    margin: 30px 0px;
+  }
+  &.login-bg {
+    background: linear-gradient(
+      180deg,
+      #0575e6 0%,
+      #02298a 84.79%,
+      #021b79 100%
+    );
+  }
+
+  .login-button {
+    &.el-button {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 18px 26px;
+      width: 307px;
+      height: 57px;
+      background: #0575e6;
+      border-radius: 30px;
+      font-weight: normal;
+      font-size: 14px;
+      line-height: 21px;
+      color: #ffffff;
+      border: none;
+      &:hover {
+        color: #409eff;
+        background-color: #ecf5ff;
+      }
+    }
+  }
+  .signup-text {
+    font-size: 14px;
+    line-height: 21px;
+    color: #333333;
+    opacity: 0.7;
+    cursor: pointer;
+    &:hover {
+      color: #2f77be;
+    }
+  }
+}
+.header-bg {
+  background-color: #3f51f4;
 }

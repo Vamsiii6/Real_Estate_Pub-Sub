@@ -20,6 +20,11 @@ const routes = [
         name: 'PropertyForm',
         component: () => import('../views/property/PropertyForm.vue'),
       },
+      {
+        path: 'mysubs',
+        name: 'MySubs',
+        component: () => import('../views/property/MySubscriptions.vue'),
+      },
     ],
   },
   {

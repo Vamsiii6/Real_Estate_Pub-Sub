@@ -1,12 +1,20 @@
 <template>
-  <div class="h-full w-full flex flex-col items-center justify-center">
-    <div class="w-6/12">
-      <div>Login Page</div>
-      <div>Name<el-input v-model="email"></el-input></div>
-      <div>Password<el-input v-model="password" show-password></el-input></div>
-      <div>
-        <el-button @click="signInUserWithGoogle">Sign-in</el-button>
-        <el-button @click="redirectToSignupPage">Sign-up</el-button>
+  <div
+    class="login-page w-full flex flex-col items-center justify-center login-bg"
+  >
+    <div class="w-6/12 login-container">
+      <div class="title-bold">Login</div>
+      <div class="mt-5">Email<el-input v-model="email"></el-input></div>
+      <div class="mt-5">
+        Password<el-input v-model="password" show-password></el-input>
+      </div>
+      <div class="flex items-center flex-col mt-10">
+        <el-button @click="signInUserWithGoogle" class="login-button"
+          >Sign-in</el-button
+        >
+        <div class="signup-text mt-5" @click="redirectToSignupPage">
+          Sign-up
+        </div>
       </div>
     </div>
   </div>
@@ -20,7 +28,7 @@ export default {
   }),
   created() {
     if (this.$cookie.get('authToken')) {
-      this.redirectToHomePage()
+      this.redirectToHome()
     }
   },
   methods: {
@@ -33,22 +41,36 @@ export default {
         try {
           let tkn = await authResponse.user.getIdToken()
           this.$cookie.set('authToken', tkn)
-          this.redirectToHomePage()
+          this.fetchUser(authResponse.user.uid)
         } catch (error) {
           this.$message.error(error)
         }
       } catch (error) {
         if (error) {
           let { message } = error
-          console.error(message || 'Error on Signin with email and password')
+          this.$message.error(
+            message || 'Error on Signin with email and password'
+          )
         }
       }
     },
     redirectToSignupPage() {
       this.$router.push({ name: 'SignUpPage' })
     },
-    redirectToHomePage() {
+    redirectToHome() {
       this.$router.push({ name: 'PropertyList' })
+    },
+    async fetchUser(uid) {
+      try {
+        let response = await this.$axios.post('/getUserDetail', {
+          uid,
+        })
+        if (response?.data?.userDetails) {
+          this.redirectToHome()
+        }
+      } catch (error) {
+        this.$message.error(error)
+      }
     },
   },
 }

@@ -5,7 +5,7 @@
 </template>
 <script>
 export default {
-  created() {
+  mounted() {
     if (this.$route.name === 'Home') {
       this.$router.push({ name: 'PropertyList' })
     }

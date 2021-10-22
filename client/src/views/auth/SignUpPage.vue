@@ -1,40 +1,44 @@
 <template>
-  <div class="h-full flex w-full flex-col items-center justify-center">
-    <div class="w-6/12">
-      <div>Signup as New User</div>
-      <div>
+  <div
+    class="login-page flex w-full flex-col items-center justify-center login-bg"
+  >
+    <div class="w-6/12 login-container">
+      <div class="title-bold">Signup</div>
+      <div class="mt-5">
         Name
         <el-input v-model="userModel.displayName"></el-input>
       </div>
-      <div>
+      <div class="mt-5">
         Email
         <el-input v-model="userModel.email"></el-input>
       </div>
-      <div>
+      <div class="mt-5">
         Phone
         <el-input v-model="userModel.phone"></el-input>
       </div>
-      <div>
+      <div class="mt-5">
         Password
         <el-input v-model="userModel.password" show-password></el-input>
       </div>
-      <div>
+      <div class="mt-5">
         Roles
-        <el-checkbox-group v-model="userModel.roles">
+        <el-checkbox-group v-model="userModel.roles" class="mt-3">
           <el-checkbox label="Seller"></el-checkbox>
           <el-checkbox label="Buyer"></el-checkbox>
         </el-checkbox-group>
       </div>
-      <div>
-        <el-button class="w-20" @click="signupUserWithFirebase"
-          >Signup</el-button
+      <div class="flex items-center flex-col mt-10">
+        <el-button class="login-button" @click="signupUserWithFirebase"
+          >Sign-up</el-button
         >
+        <div class="signup-text mt-5" @click="redirectToSigninPage">
+          Already have a account
+        </div>
       </div>
     </div>
   </div>
 </template>
 <script>
-import http from '@/http'
 import { auth } from 'src/plugins/firebase'
 export default {
   data: () => ({
@@ -60,28 +64,28 @@ export default {
         )
         if (response.user) {
           let rolesSum = 0
-          for (let role in this.userModel.roles) {
-            if (role == 'Seller') {
+          for (let index in this.userModel.roles) {
+            if (this.userModel.roles[index] == 'Seller') {
               rolesSum += 2
             }
-            if (role == 'Buyer') {
+            if (this.userModel.roles[index] == 'Buyer') {
               rolesSum += 4
             }
           }
           let { user = {} } = response
-          let { displayName, email, uid, phone } = user || {}
+          let { email, uid } = user || {}
           this.addUserEntryToDb({
-            name: displayName,
+            name: this.userModel.displayName,
             email,
             uid,
-            phone,
+            phone: this.userModel.displayName,
             roles: rolesSum,
           })
-          this.redirectToLoginPage()
         }
       } catch (error) {
         let { message } = error || {}
-        this.errorMessage = message
+        console.log(error)
+        this.$message.error(message || 'Signup Failed')
       }
     },
     redirectToLoginPage() {
@@ -89,7 +93,12 @@ export default {
     },
     async addUserEntryToDb(user) {
       try {
-        await http.post('/api/user/add', user)
+        let response = await this.$axios.post('/addNewUser', {
+          userDetails: user,
+        })
+        if (response) {
+          this.redirectToLoginPage()
+        }
       } catch (error) {
         this.$message.error(error)
       }
@@ -97,6 +106,9 @@ export default {
 
     redirectToHomePage() {
       this.$router.push({ name: 'PropertyList' })
+    },
+    redirectToSigninPage() {
+      this.$router.push({ name: 'LoginPage' })
     },
   },
 }
