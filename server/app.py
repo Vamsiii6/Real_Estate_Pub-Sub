@@ -1,15 +1,16 @@
+from typing import Tuple
 from flask import Flask, request, abort
 from flask_cors import CORS
 import os
-from dotenv import load_dotenv
-from pypika import Table, MySQLQuery
+from pypika import Table, MySQLQuery, Order, functions
 import firebase_admin
 from functools import wraps
 from firebase_admin import credentials, auth
 import pymysql.cursors
+from flask_socketio import SocketIO
+import requests
 import threading
 import time
-from flask_socketio import SocketIO
 
 # Firebase Instantiation
 if not firebase_admin._apps:
@@ -17,8 +18,6 @@ if not firebase_admin._apps:
         "ds-project1-186c7-firebase-adminsdk-vqoyz-b5e74dceac.json")
     firebase_admin.initialize_app(cred)
 
-# ENV Variables
-load_dotenv()
 
 # Flask with cors
 app = Flask(__name__)
@@ -39,16 +38,22 @@ app.config['PROPAGATE_EXCEPTIONS'] = False
 
 
 # Sample Broker thread
-# class brokerThread(threading.Thread):
-#     def __init__(self, name):
-#         threading.Thread.__init__(self)
-#         self.name = name
+class brokerThread(threading.Thread):
+    def __init__(self, name, payload_):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.payload_ = payload_
 
-#     def run(self):
-#         time.sleep(10)
-#         # Web socket event to client
-#         socketio.emit('testing-event', {'data': 'foobar'})
-#         print(f"print args in thread {self.name}")
+    def run(self):
+        app.logger.info('sleep begin')
+        time.sleep(5)
+        app.logger.info('sleep end')
+        # Web socket event to client
+        # socketio.emit('testing-event', {'data': 'foobar'})
+        app.logger.info(self.payload_)
+        res = requests.post('http://broker:5001/broker/notify',
+                            json=self.payload_, timeout=600)
+        app.logger.info(res.json())
 
 
 # Decorator for API Auth validation using Firebase auth Manager
@@ -81,41 +86,82 @@ def fetchAllProperty(user_id):
     connection = pymysql.connect(**config)
     with connection.cursor() as cursor:
         properties = Table('properties')
-        q = MySQLQuery.from_(properties).select(
-            'id', 'name', 'description', 'price', 'room_type_id', 'city_id', 'image_url')
-        if request.args['mode'] == 'all':
-            q = q.where(properties.created_by == user_id)
-        cursor.execute(q.get_sql())
+        page = 1
+        if (request.args['page']):
+            page = request.args['page']
+        q = MySQLQuery.from_(properties)
+        if request.args['mode'] == 'myown':
+            q = q.where(properties.created_by_uid == user_id)
+        if request.args['mode'] == 'subscribed':
+            q1 = f"select R.room_type_id from user_room_types_rel as R where R.uid = '{user_id}'"
+            cursor.execute(q1)
+            room_types = cursor.fetchall()
+            room_type_ids = tuple(i['room_type_id'] for i in room_types)
+            q2 = f"select city_id from user_cities_rel where uid = '{user_id}'"
+            cursor.execute(q2)
+            city_types = cursor.fetchall()
+            city_type_ids = tuple(i['city_id'] for i in city_types)
+            if len(room_type_ids) == 0 and len(city_type_ids) == 0:
+                q = q.where(False)
+            if len(room_type_ids) > 0:
+                q = q.where(properties.room_type_id.isin(room_type_ids))
+            app.logger.info(f"len - {len(city_type_ids)}")
+            if len(city_type_ids) > 0:
+                app.logger.info(f"{properties.city_id.isin(city_type_ids)}")
+                q = q.where(properties.city_id.isin(city_type_ids))
+            q = q.where((properties.created_by_uid == user_id).negate())
+            app.logger.info(f"Criteria - {q.get_sql()}")
+        q_final = q.select('id', 'name', 'description', 'price', 'room_type_id', 'city_id',
+                           'image_url', 'created_by_name').orderby('id', order=Order.desc).limit(8).offset((int(page)-1)*8)
+        q_count = q.select(functions.Count("id").as_('count'))
+        app.logger.info(q.get_sql())
+        cursor.execute(q_final.get_sql())
         results = cursor.fetchall()
+        result_ = {"records": results}
+        # app.logger.info(request.args['withcount'])
+        if request.args['with_count'] == 'true':
+            cursor.execute(q_count.get_sql())
+            app.logger.info(q_count.get_sql())
+            count = cursor.fetchone()
+            result_['count'] = count['count']
         cursor.close()
     connection.close()
-    return {"records": results}
+    return result_
 
 
 # Adds new entry to the Property table in the database
-@app.route("/api/addNewProperty", methods=["POST"])
-@login_required
+@ app.route("/api/addNewProperty", methods=["POST"])
+@ login_required
 def createNewProperty(user_id):
     connection = pymysql.connect(**config)
     with connection.cursor() as cursor:
         input_json = request.get_json(force=True)
         properties = Table('properties')
         input_vals = input_json['properties']
+        users_table = Table('users')
+        q4 = MySQLQuery.from_(users_table).select(
+            'name').where(users_table.uid == user_id)
+        cursor.execute(q4.get_sql())
+        user_obj = cursor.fetchone()
+        created_by_name = user_obj['name']
         insert_val = (input_vals['name'],
-                      input_vals['description'], input_vals['price'], input_vals['city_id'], input_vals['room_type_id'], user_id)
+                      input_vals['description'], input_vals['price'], input_vals['city_id'], input_vals['room_type_id'], user_id, created_by_name)
         q = MySQLQuery.into(properties).columns(
-            'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by').insert(insert_val)
+            'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by_uid', 'created_by_name').insert(insert_val)
         cursor.execute(q.get_sql())
         cursor.close()
     connection.commit()
     connection.close()
+    broker_thread = brokerThread(
+        "ds-broker", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}})
+    broker_thread.start()
 
     return input_vals
 
 # Adds new entry to the User table
 
 
-@app.route("/api/addNewUser", methods=["POST"])
+@ app.route("/api/addNewUser", methods=["POST"])
 def createNewUser():
     connection = pymysql.connect(**config)
     with connection.cursor() as cursor:
@@ -235,6 +281,25 @@ def getAllRoomTypes(user_id):
         cursor.close()
     connection.close()
     return {"roomTypes": roomTypes}
+
+
+@app.route("/api/invokeBroker", methods=["GET"])
+def invokeBroker():
+    connection = pymysql.connect(**config)
+    with connection.cursor() as cursor:
+        properties = Table('properties')
+        q = MySQLQuery.from_(properties).select(
+            'id', 'name', 'description', 'price', 'room_type_id', 'city_id', 'image_url').where(properties.room_type_id.notnull() & properties.city_id.notnull())
+        app.logger.info(q.get_sql())
+        cursor.execute(q.get_sql())
+        results = cursor.fetchall()
+        payload_ = {"properties": results}
+        res = requests.post('http://broker:5001/broker/notify',
+                            json=payload_, timeout=600)
+        app.logger.info(res.json())
+        cursor.close()
+    connection.close()
+    return {"success": 1}
 
 
 # Websocket event from Client

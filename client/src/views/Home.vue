@@ -64,8 +64,14 @@
               class="h-10 w-10"
             />
           </el-button>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item command="my-sub"
+          <el-dropdown-menu slot="dropdown" class="drop-menu-re">
+            <el-dropdown-item disabled command="my-sub" class="info-part"
+              ><i class="el-icon-user"></i> Signed in as
+              <span class="font-bold">{{
+                `${userDetails.name}`
+              }}</span></el-dropdown-item
+            >
+            <el-dropdown-item divided command="my-sub"
               ><i class="el-icon-set-up"></i> My Subscriptions</el-dropdown-item
             >
             <el-dropdown-item command="syncData"
@@ -80,7 +86,7 @@
       </div>
     </div>
     <div class="h-sub-container bg-white p-10 overflow-y-scroll">
-      <router-view :key="getType" v-if="!loading" />
+      <router-view :key="getType" v-if="!loading && remountFlag" />
       <div v-if="loading">
         <el-skeleton :rows="6" animated></el-skeleton>
       </div>
@@ -90,13 +96,14 @@
 
 <script>
 import helper from 'src/mixins/helper'
-// import io from 'socket.io-client'
+import io from 'socket.io-client'
 import { mapState } from 'vuex'
 
 export default {
   name: 'Home',
   data: () => ({
     loading: true,
+    remountFlag: true,
   }),
   computed: {
     ...mapState({ userDetails: (state) => state.userDetails }),
@@ -108,11 +115,40 @@ export default {
     if (this.$cookie && !this.$cookie.get('authToken')) {
       this.$router.push({ name: 'LoginPage' })
     }
-    this.fetchUser()
-    // const socket = io('http://localhost:5000/')
-    // socket.on('testing-event', (...args) => {
-    //   console.log('Inside event', args)
-    // })
+    Promise.resolve(this.fetchUser()).then(() => {
+      const socket = io('http://localhost:5001/')
+      if (this.userDetails?.uid) {
+        socket.on(`socket-${this.userDetails?.uid}`, (...args) => {
+          let message = `Property <b>${this.$_.get(
+            args,
+            '[0].property.name'
+          )}</b> was added by <b>${this.$_.get(args, '[0].publisher')}</b>`
+          message += `<br><br>For topic:`
+          let city = this.$_.get(args, '[0].topic_meta.city')
+          let room_type = this.$_.get(args, '[0].topic_meta.room_type')
+          if (!this.$_.isEmpty(city)) {
+            message += `<br>City: <b>${city}</b>`
+          }
+          if (!this.$_.isEmpty(room_type)) {
+            message += `<br>Room Type: <b>${room_type}</b>`
+          }
+          this.$notify.info({
+            title: 'New Listing',
+            dangerouslyUseHTMLString: true,
+            message,
+            duration: 0,
+          })
+          this.remountFlag = false
+          this.$nextTick(() => {
+            this.remountFlag = true
+          })
+        })
+      }
+    })
+    document.title = 'Real Estate Pub Sub'
+  },
+  beforeUnmount() {
+    io('http://localhost:5001/').off(`socket-${this.userDetails?.uid}`)
   },
   methods: {
     routeToList(type) {

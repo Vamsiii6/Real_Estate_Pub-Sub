@@ -3,11 +3,11 @@
     <div class="flex flex-row justify-between w-4/5">
       <div class="heading-1">Create New Property</div>
       <div>
-        <el-button @click="saveForm()" type="success" plain size="medium"
+        <el-button @click="saveForm()" type="primary" plain size="medium"
           >Publish</el-button
         >
         <el-button
-          type="warning"
+          type="danger"
           plain
           @click="routeToPropertyList()"
           size="medium"
@@ -137,7 +137,7 @@ export default {
       }
     },
     routeToPropertyList() {
-      this.$router.push({ name: 'PropertyList', params: { type: 'all' } })
+      this.$router.push({ name: 'PropertyList', params: { type: 'myown' } })
     },
     async saveForm() {
       let propertyModel = this.$_.clone(this.formModel)

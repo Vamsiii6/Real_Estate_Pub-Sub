@@ -77,8 +77,26 @@
             <InlineSvg src="home" iconClass="icon size-m" class="mr-3" />
             {{ roomTypesMap[property.room_type_id] }}
           </div>
+          <div class="mt-3 flex flex-row">
+            <el-avatar :size="20" icon="el-icon-user-solid"></el-avatar>
+            <div class="ml-3 w-50 truncate">
+              {{ property.created_by_name }}
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+    <div
+      v-if="!$_.isEmpty(allProperty)"
+      class="mt-10 pb-10 flex justify-center"
+    >
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="propertiesNext"
+        :total="total"
+      >
+      </el-pagination>
     </div>
   </div>
 </template>
@@ -89,6 +107,8 @@ export default {
   data: () => ({
     allProperty: [],
     loading: true,
+    page: 1,
+    total: 8,
   }),
   created() {
     let promises = [
@@ -140,12 +160,26 @@ export default {
     routeToForm() {
       this.$router.push({ name: 'PropertyForm' })
     },
+    async propertiesNext(new_page) {
+      this.page = new_page
+      try {
+        this.loading = true
+        let response = await this.$axios.get(
+          `/getAllProperty?mode=${this.type}&page=${this.page}&with_count=true`
+        )
+        this.allProperty = response?.data?.records
+        this.loading = false
+      } catch (error) {
+        this.$message.error('Server Error')
+      }
+    },
     async getAllPropertyRecord() {
       try {
         let response = await this.$axios.get(
-          `/getAllProperty?mode=${this.type}`
+          `/getAllProperty?mode=${this.type}&page=${this.page}&with_count=true`
         )
         this.allProperty = response?.data?.records
+        this.total = response?.data?.count
       } catch (error) {
         this.$message.error('Server Error')
       }

@@ -19,7 +19,7 @@
   font-size: 25px;
 }
 .prop-container {
-  height: 22rem;
+  height: 26rem;
   width: 20rem;
   background-color: #f5f6fa;
   border-radius: 10px;
@@ -30,14 +30,14 @@
   cursor: pointer;
   &:hover {
     background-color: #e1e2e9;
-    transform: scale(1.1);
+    transform: scale(1.06);
   }
 }
 .image-container {
   background: #e2dede;
   margin: 6px 6px 0px 6px;
   border-radius: 10px;
-  height: 170px;
+  height: 180px;
 }
 .prop-title {
   font-size: 18px;
@@ -157,4 +157,9 @@ svg.icon {
   font-size: 18px;
   font-weight: bold;
   color: #333333;
+}
+.drop-menu-re {
+  .info-part.el-dropdown-menu__item.is-disabled {
+    color: #606266;
+  }
 }
