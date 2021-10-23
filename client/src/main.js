@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import store from './store'
+import store from './store/index'
 import './css/index.css'
 import './scss/common.scss'
 import Element from 'element-ui'
@@ -10,6 +10,7 @@ import _ from 'lodash'
 import InlineSvg from './components/InlineSvg'
 import VueCookie from 'vue-cookie'
 import http from '@/http'
+import locale from 'element-ui/lib/locale/lang/en'
 Vue.config.productionTip = false
 
 new Vue({
@@ -17,7 +18,7 @@ new Vue({
   store,
   render: (h) => h(App),
 }).$mount('#app')
-Vue.use(Element)
+Vue.use(Element, { locale })
 Vue.use(VueCookie)
 
 Vue.component('InlineSvg', InlineSvg)

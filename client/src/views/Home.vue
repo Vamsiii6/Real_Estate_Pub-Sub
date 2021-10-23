@@ -11,33 +11,46 @@
         p-5
       "
     >
-      <div class="flex flex-row">
+      <div v-if="loading"></div>
+      <div v-else class="flex flex-row">
         <div
           :class="[
             'hyper-link-1 items-center hover-effect',
-            $route.name === 'PropertyList' && 'is-active',
+            getType === 'myown' && 'is-active',
           ]"
-          @click="routeToList()"
+          v-if="Number(userDetails.roles) & 2"
+          @click="routeToList('myown')"
         >
           My Properties
         </div>
-        <div class="hyper-link-1 pr-5 pl-5">|</div>
+        <div
+          v-if="Number(userDetails.roles) & 2"
+          class="hyper-link-1 pr-5 pl-5"
+        >
+          |
+        </div>
         <div
           :class="[
-            'hyper-link-1',
-            $route.name === 'PropertyForm' && 'is-active',
+            'hyper-link-1 hover-effect',
+            getType === 'subscribed' && 'is-active',
           ]"
-          @click="routeToForm()"
+          v-if="Number(userDetails.roles) & 4"
+          @click="routeToList('subscribed')"
         >
           Subscribed Properties
         </div>
-        <div class="hyper-link-1 pr-5 pl-5">|</div>
+        <div
+          v-if="Number(userDetails.roles) & 4"
+          class="hyper-link-1 pr-5 pl-5"
+        >
+          |
+        </div>
         <div
           :class="[
-            'hyper-link-1 pr-5',
-            $route.name === 'PropertyForm' && 'is-active',
+            'hyper-link-1 pr-5 hover-effect',
+            getType === 'all' && 'is-active',
           ]"
-          @click="routeToForm()"
+          @click="routeToList('all')"
         >
           All Properties
         </div>
@@ -53,37 +66,57 @@
           </el-button>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="my-sub"
-              >My Subscriptions</el-dropdown-item
+              ><i class="el-icon-set-up"></i> My Subscriptions</el-dropdown-item
             >
-            <el-dropdown-item command="logout">Logout</el-dropdown-item>
+            <el-dropdown-item command="syncData"
+              ><i class="el-icon-refresh"></i> Sync Data from
+              API</el-dropdown-item
+            >
+            <el-dropdown-item command="logout"
+              ><i class="el-icon-circle-close"></i> Logout</el-dropdown-item
+            >
           </el-dropdown-menu>
         </el-dropdown>
       </div>
     </div>
-    <div class="h-5/6 bg-blue-50 p-10 overflow-y-scroll">
-      <router-view />
+    <div class="h-sub-container bg-white p-10 overflow-y-scroll">
+      <router-view :key="getType" v-if="!loading" />
+      <div v-if="loading">
+        <el-skeleton :rows="6" animated></el-skeleton>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import helper from 'src/mixins/helper'
-import io from 'socket.io-client'
+// import io from 'socket.io-client'
+import { mapState } from 'vuex'
 
 export default {
   name: 'Home',
+  data: () => ({
+    loading: true,
+  }),
+  computed: {
+    ...mapState({ userDetails: (state) => state.userDetails }),
+    getType() {
+      return this.$route?.params?.type || ''
+    },
+  },
   created() {
     if (this.$cookie && !this.$cookie.get('authToken')) {
       this.$router.push({ name: 'LoginPage' })
     }
-    const socket = io('http://localhost:5000/')
-    socket.on('testing-event', (...args) => {
-      console.log('Inside event', args)
-    })
+    this.fetchUser()
+    // const socket = io('http://localhost:5000/')
+    // socket.on('testing-event', (...args) => {
+    //   console.log('Inside event', args)
+    // })
   },
   methods: {
-    routeToList() {
-      this.$router.push({ name: 'PropertyList' })
+    routeToList(type) {
+      this.$router.push({ name: 'PropertyList', params: { type } })
     },
     routeToForm() {
       this.$router.push({ name: 'PropertyForm' })
@@ -96,6 +129,17 @@ export default {
         helper.authLogout()
       } else if (command == 'my-sub') {
         this.routeToMySubs()
+      }
+    },
+    async fetchUser() {
+      try {
+        let response = await this.$axios.get('/getUserDetail')
+        if (response?.data?.userDetails) {
+          this.$store.commit('setUser', response?.data?.userDetails || {})
+          this.loading = false
+        }
+      } catch (error) {
+        this.$message.error(error?.message || 'Server Error')
       }
     },
   },

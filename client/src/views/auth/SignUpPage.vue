@@ -105,7 +105,7 @@ export default {
     },
 
     redirectToHomePage() {
-      this.$router.push({ name: 'PropertyList' })
+      this.$router.push({ name: 'PropertyList', params: { type: 'all' } })
     },
     redirectToSigninPage() {
       this.$router.push({ name: 'LoginPage' })

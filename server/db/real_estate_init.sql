@@ -19,21 +19,23 @@ CREATE TABLE `properties` (
   `room_type_id` bigint,
   `add_info` bigint,
   `created_by` varchar(255),
-  `created_at` timestamp
+  `created_at` timestamp,
+  `image_url` varchar(1000),
+  `listing_id` varchar(255)
 );
 
 CREATE TABLE `cities` (
-  `id` int PRIMARY KEY,
+  `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255)
 );
 
 CREATE TABLE `room_type` (
-  `id` int PRIMARY KEY,
+  `id` int PRIMARY KEY AUTO_INCREMENT,
   `type` varchar(255)
 );
 
 CREATE TABLE `location` (
-  `id` int PRIMARY KEY,
+  `id` int PRIMARY KEY AUTO_INCREMENT,
   `address_line1` varchar(255),
   `address_line2` varchar(255),
   `city` bigint,
@@ -43,11 +45,13 @@ CREATE TABLE `location` (
 );
 
 CREATE TABLE `user_cities_rel` (
-  `uid` bigint,
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `uid` varchar(255),
   `city_id` bigint
 );
 
 CREATE TABLE `user_room_types_rel` (
-  `uid` bigint,
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `uid` varchar(255),
   `room_type_id` bigint
 );

@@ -11,7 +11,8 @@ const routes = [
     component: Home,
     children: [
       {
-        path: 'list',
+        path: 'list/:type',
+        props: true,
         name: 'PropertyList',
         component: () => import('../views/property/PropertyList.vue'),
       },

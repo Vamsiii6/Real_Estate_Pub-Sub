@@ -1,9 +1,9 @@
 <template>
-  <div class="h-full">
+  <div class="h-full" :key="type">
     <div class="flex flex-row justify-between">
       <div class="heading-1">Property List</div>
       <el-button
-        v-if="!$_.isEmpty(allProperty)"
+        v-if="!$_.isEmpty(allProperty) && type == 'myown'"
         type="primary"
         plain
         icon="el-icon-plus"
@@ -29,7 +29,7 @@
         />
         No Properties found
       </div>
-      <div class="mt-5">
+      <div v-if="type == 'myown'" class="mt-5">
         <el-button
           type="primary"
           plain
@@ -45,11 +45,16 @@
         :key="index"
         class="prop-container flex flex-col"
       >
-        <div class="flex justify-center items-center">
+        <div class="flex justify-center items-center image-container">
+          <img
+            v-if="!$_.isEmpty(property.image_url)"
+            :src="property.image_url"
+            class="h-full w-full rounded-md"
+          />
           <InlineSvg
+            v-else
             src="real-estate-no-data"
-            iconClass="icon size-100"
-            class="h-3/6 w-3/6"
+            iconClass="icon size-xl"
           />
         </div>
         <div class="p-5">
@@ -64,30 +69,83 @@
           <div class="mt-3 truncate">
             {{ property.description }}
           </div>
+          <div class="mt-3 flex flex-row">
+            <InlineSvg src="location" iconClass="icon size-m" class="mr-3" />
+            {{ citiesMap[property.city_id] }}
+          </div>
+          <div class="mt-3 flex flex-row">
+            <InlineSvg src="home" iconClass="icon size-m" class="mr-3" />
+            {{ roomTypesMap[property.room_type_id] }}
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script>
+import { mapState } from 'vuex'
 export default {
+  props: ['type'],
   data: () => ({
     allProperty: [],
     loading: true,
   }),
-  mounted() {
-    this.getAllPropertyRecord()
+  created() {
+    let promises = [
+      this.fetchCities(),
+      this.fetchRoomTypes(),
+      this.getAllPropertyRecord(),
+    ]
+    this.loading = true
+    Promise.all(promises).then(() => {
+      this.loading = false
+    })
+  },
+  computed: {
+    ...mapState({
+      allCites: (state) => state.allCities,
+      allRoomTypes: (state) => state.allRoomTypes,
+    }),
+    citiesMap() {
+      let citiesMap = {}
+      this.allCites.forEach((record) => {
+        citiesMap[record.id] = record.name
+      })
+      return citiesMap
+    },
+    roomTypesMap() {
+      let roomTypesMap = {}
+      this.allRoomTypes.forEach((record) => {
+        roomTypesMap[record.id] = record.type
+      })
+      return roomTypesMap
+    },
   },
   methods: {
+    async fetchCities() {
+      try {
+        await this.$store.dispatch('getCities')
+      } catch (error) {
+        this.$message.error(error?.message || 'Server Error')
+      }
+    },
+
+    async fetchRoomTypes() {
+      try {
+        await this.$store.dispatch('getRoomTypes')
+      } catch (error) {
+        this.$message.error(error?.message || 'Server Error')
+      }
+    },
     routeToForm() {
       this.$router.push({ name: 'PropertyForm' })
     },
     async getAllPropertyRecord() {
       try {
-        this.loading = true
-        let response = await this.$axios.get('/getAllProperty')
+        let response = await this.$axios.get(
+          `/getAllProperty?mode=${this.type}`
+        )
         this.allProperty = response?.data?.records
-        this.loading = false
       } catch (error) {
         this.$message.error('Server Error')
       }

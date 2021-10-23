@@ -41,7 +41,7 @@ export default {
         try {
           let tkn = await authResponse.user.getIdToken()
           this.$cookie.set('authToken', tkn)
-          this.fetchUser(authResponse.user.uid)
+          this.redirectToHome()
         } catch (error) {
           this.$message.error(error)
         }
@@ -58,19 +58,7 @@ export default {
       this.$router.push({ name: 'SignUpPage' })
     },
     redirectToHome() {
-      this.$router.push({ name: 'PropertyList' })
-    },
-    async fetchUser(uid) {
-      try {
-        let response = await this.$axios.post('/getUserDetail', {
-          uid,
-        })
-        if (response?.data?.userDetails) {
-          this.redirectToHome()
-        }
-      } catch (error) {
-        this.$message.error(error)
-      }
+      this.$router.push({ name: 'PropertyList', params: { type: 'all' } })
     },
   },
 }
