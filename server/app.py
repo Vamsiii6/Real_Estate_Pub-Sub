@@ -1,6 +1,5 @@
 from flask import Flask, request, abort
 from flask_cors import CORS
-import os
 from pypika import Table, MySQLQuery, Order, functions
 import firebase_admin
 from functools import wraps
@@ -27,10 +26,6 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 socketio.run(app)
 
 # Connection to MySQL
-mysql_password = os.getenv('SQL_PASSWORD')
-mysql_user = os.getenv('SQL_USER')
-mysql_db = os.getenv('DB_NAME')
-mysql_host = os.getenv('DB_NAME')
 config = {"host": "db", "user": "root", "password": "root", "database": "ds_project1", "port": 3306,
           "cursorclass": pymysql.cursors.DictCursor}
 app.config['PROPAGATE_EXCEPTIONS'] = False

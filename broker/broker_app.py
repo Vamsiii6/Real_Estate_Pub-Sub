@@ -1,6 +1,5 @@
-from flask import Flask, request, abort
+from flask import Flask, request
 from flask_cors import CORS
-import os
 from pypika import Table, MySQLQuery
 import pymysql.cursors
 from flask_socketio import SocketIO
@@ -14,16 +13,12 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 socketio.run(app)
 
 # Connect to MySQL
-mysql_password = os.getenv('SQL_PASSWORD')
-mysql_user = os.getenv('SQL_USER')
-mysql_db = os.getenv('DB_NAME')
-mysql_host = os.getenv('DB_NAME')
 config = {"host": "db", "user": "root", "password": "root", "database": "ds_project1", "port": 3306,
           "cursorclass": pymysql.cursors.DictCursor}
 app.config['PROPAGATE_EXCEPTIONS'] = False
 
 
-# Notify clients
+# Notify users based on subscription for the added property
 @app.route("/broker/notify", methods=["POST"])
 def notifyUsers():
     connection = pymysql.connect(**config)
@@ -70,7 +65,7 @@ def notifyUsers():
     connection.close()
     return {"response": "success"}
 
-# Notify clients
+# Notify users based on subscription for the added properties
 
 
 @app.route("/broker/notifyBulk", methods=["POST"])
@@ -85,11 +80,6 @@ def notifyBulk():
         q2 = f"select C.uid from user_cities_rel as C where not exists (select R.uid from user_room_types_rel as R where R.uid = C.uid) and C.city_id = {c_id}"
         cursor.execute(q2)
         result2 = cursor.fetchall()
-        city_table = Table('cities')
-        q5 = MySQLQuery.from_(city_table).select(
-            'name').where(city_table.id == c_id)
-        cursor.execute(q5.get_sql())
-        city = cursor.fetchone()
         final_tuple = (*result2,)
         for r_id in r_ids:
             q1 = f"select C.uid from user_cities_rel as C inner join user_room_types_rel as R on R.uid = C.uid  where C.city_id = {c_id} and R.room_type_id = {r_id}"
@@ -98,11 +88,6 @@ def notifyBulk():
             q3 = f"select R.uid from user_room_types_rel as R where not exists (select C.uid from user_cities_rel as C where R.uid = C.uid) and R.room_type_id= {r_id}"
             cursor.execute(q3)
             result3 = cursor.fetchall()
-            room_type_table = Table('room_type')
-            q6 = MySQLQuery.from_(room_type_table).select(
-                'type').where(room_type_table.id == r_id)
-            cursor.execute(q6.get_sql())
-            room_type = cursor.fetchone()
             final_tuple = (*final_tuple, *result1, *result3)
         if len(final_tuple) > 0:
             for user in final_tuple:

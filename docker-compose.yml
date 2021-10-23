@@ -7,6 +7,8 @@ services:
       - "3003:3306"
     volumes:
       - ./server/db:/docker-entrypoint-initdb.d/:ro
+    environment:
+      MYSQL_ROOT_PASSWORD: root
   publisher:
     build: ./server
     depends_on:

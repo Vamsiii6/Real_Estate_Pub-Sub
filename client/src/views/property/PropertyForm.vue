@@ -34,6 +34,7 @@
       </el-form-item>
       <el-form-item class="mt-10 mb-10 w-full" label="City" prop="city_id">
         <el-select
+          filterable
           v-model="formModel.city_id"
           placeholder="Select City"
           class="w-full"
@@ -53,6 +54,7 @@
         prop="room_type_id"
       >
         <el-select
+          filterable
           v-model="formModel.room_type_id"
           placeholder="Select Room Type"
           class="w-full"
@@ -93,10 +95,14 @@ export default {
         { required: true, message: 'Please input price', trigger: 'blur' },
       ],
       room_type_id: [
-        { required: true, message: 'Please input room type', trigger: 'blur' },
+        {
+          required: true,
+          message: 'Please input room type',
+          trigger: 'change',
+        },
       ],
       city_id: [
-        { required: true, message: 'Please input city', trigger: 'blur' },
+        { required: true, message: 'Please input city', trigger: 'change' },
       ],
       description: [
         {
