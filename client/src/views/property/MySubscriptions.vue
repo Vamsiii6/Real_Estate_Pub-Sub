@@ -62,7 +62,9 @@ export default {
   methods: {
     async fetchAllSubscriptions() {
       try {
-        let response = await this.$axios.get('/getAllSubscriptions')
+        let response = await this.$axios.get(
+          'http://localhost:5002/api/getAllSubscriptions'
+        )
         if (response?.data) {
           this.selectedCities = (response?.data?.cities || []).map(
             (r) => r.city_id
@@ -91,10 +93,13 @@ export default {
     },
     async manageSubscriptions(direction) {
       try {
-        let response = await this.$axios.post('/manageSubscriptions', {
-          user_cities_rel: this.selectedCities,
-          user_room_types_rel: this.selectedRoomTypes,
-        })
+        let response = await this.$axios.post(
+          'http://localhost:5002/api/manageSubscriptions',
+          {
+            user_cities_rel: this.selectedCities,
+            user_room_types_rel: this.selectedRoomTypes,
+          }
+        )
         if (response?.data) {
           this.$message.success(
             `${

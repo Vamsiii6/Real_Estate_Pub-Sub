@@ -9,10 +9,12 @@ export default new Vuex.Store({
     userDetails: {},
     allCities: [],
     allRoomTypes: [],
+    port: 5000,
   },
   mutations: {
     setUser(state, userDetails) {
       state.userDetails = userDetails || {}
+      state.port = Number(state?.userDetails?.roles) == 4 ? 5002 : 5000
     },
     setCities(state, payload) {
       state.allCities = payload || []
@@ -24,7 +26,9 @@ export default new Vuex.Store({
   actions: {
     async getCities({ commit, state }) {
       if (_.isEmpty(state.allCities)) {
-        let response = await axios.get('/getAllCities')
+        let response = await axios.get(
+          `http://localhost:${state.port}/api/getAllCities`
+        )
         if (response?.data) {
           commit('setCities', response?.data?.cities || [])
         }
@@ -34,7 +38,9 @@ export default new Vuex.Store({
     },
     async getRoomTypes({ commit, state }) {
       if (_.isEmpty(state.allRoomTypes)) {
-        let response = await axios.get('/getAllRoomTypes')
+        let response = await axios.get(
+          `http://localhost:${state.port}/api/getAllRoomTypes`
+        )
         if (response?.data) {
           commit('setRoomTypes', response?.data?.roomTypes || [])
         }

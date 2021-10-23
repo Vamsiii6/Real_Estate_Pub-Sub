@@ -93,9 +93,12 @@ export default {
     },
     async addUserEntryToDb(user) {
       try {
-        let response = await this.$axios.post('/addNewUser', {
-          userDetails: user,
-        })
+        let response = await this.$axios.post(
+          'http://localhost:5000/api/addNewUser',
+          {
+            userDetails: user,
+          }
+        )
         if (response) {
           this.redirectToLoginPage()
         }

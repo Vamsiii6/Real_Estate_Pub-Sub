@@ -36,7 +36,6 @@ def notifyUsers():
         q2 = f"select C.uid from user_cities_rel as C  where not exists (select R.uid from user_room_types_rel as R where R.uid = C.uid) and C.city_id = {p['city_id']}"
         cursor.execute(q2)
         result2 = cursor.fetchall()
-        app.logger.info(result2)
         q3 = f"select R.uid from user_room_types_rel as R  where not exists (select C.uid from user_cities_rel as C where R.uid = C.uid) and R.room_type_id= {p['room_type_id']}"
         cursor.execute(q3)
         result3 = cursor.fetchall()
@@ -51,7 +50,6 @@ def notifyUsers():
         cursor.execute(q6.get_sql())
         room_type = cursor.fetchone()
         final_tuple = (*result1, *result2, *result3)
-        app.logger.info(f"1 - {result1} 2 - {result2} 3 - {result3}")
         if len(final_tuple) > 0:
             for user in final_tuple:
                 if user == p['created_by_uid']:

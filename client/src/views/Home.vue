@@ -180,7 +180,9 @@ export default {
     },
     async fetchDatafromAPI() {
       try {
-        let response = await this.$axios.get('/invokeApi')
+        let response = await this.$axios.get(
+          `http://localhost:${this.$store.state.port}/api/triggerRapidApi`
+        )
         if (response) {
           this.$message.success('Data synced from API successfully')
           this.remountFlag = false
@@ -194,7 +196,9 @@ export default {
     },
     async fetchUser() {
       try {
-        let response = await this.$axios.get('/getUserDetail')
+        let response = await this.$axios.get(
+          `http://localhost:${this.$store.state.port}/api/getUserDetail`
+        )
         if (response?.data?.userDetails) {
           this.$store.commit('setUser', response?.data?.userDetails || {})
           this.loading = false

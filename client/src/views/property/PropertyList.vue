@@ -183,7 +183,7 @@ export default {
       try {
         this.loading = true
         let response = await this.$axios.get(
-          `/getAllProperty?mode=${this.type}&page=${this.page}&with_count=true`
+          `http://localhost:${this.$store.state.port}/api/getAllProperty?mode=${this.type}&page=${this.page}&with_count=true`
         )
         this.allProperty = response?.data?.records
         this.loading = false
@@ -194,7 +194,7 @@ export default {
     async getAllPropertyRecord() {
       try {
         let response = await this.$axios.get(
-          `/getAllProperty?mode=${this.type}&page=${this.page}&with_count=true`
+          `http://localhost:${this.$store.state.port}/api/getAllProperty?mode=${this.type}&page=${this.page}&with_count=true`
         )
         this.allProperty = response?.data?.records
         this.total = response?.data?.count

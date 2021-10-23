@@ -7,10 +7,6 @@ from functools import wraps
 from firebase_admin import credentials, auth
 import pymysql.cursors
 from flask_socketio import SocketIO
-import requests
-import threading
-import time
-import json
 
 # Firebase Instantiation
 if not firebase_admin._apps:
@@ -35,21 +31,6 @@ mysql_host = os.getenv('DB_NAME')
 config = {"host": "db", "user": "root", "password": "root", "database": "ds_project1", "port": 3306,
           "cursorclass": pymysql.cursors.DictCursor}
 app.config['PROPAGATE_EXCEPTIONS'] = False
-
-
-# Sample Broker thread
-class brokerThread(threading.Thread):
-    def __init__(self, name, payload_):
-        threading.Thread.__init__(self)
-        self.name = name
-        self.payload_ = payload_
-
-    def run(self):
-        time.sleep(5)
-        # Inform broker about new event
-        res = requests.post('http://broker:5001/broker/notify',
-                            json=self.payload_, timeout=600)
-        app.logger.info(res.json())
 
 
 # Decorator for API Auth validation using Firebase auth Manager
@@ -118,73 +99,6 @@ def fetchAllProperty(user_id):
     connection.close()
     return result_
 
-# Adds new entry to the Property table in the database
-
-
-@ app.route("/api/addNewProperty", methods=["POST"])
-@ login_required
-def createNewProperty(user_id):
-    connection = pymysql.connect(**config)
-    with connection.cursor() as cursor:
-        input_json = request.get_json(force=True)
-        properties = Table('properties')
-        input_vals = input_json['properties']
-        users_table = Table('users')
-        q4 = MySQLQuery.from_(users_table).select(
-            'name').where(users_table.uid == user_id)
-        cursor.execute(q4.get_sql())
-        user_obj = cursor.fetchone()
-        created_by_name = user_obj['name']
-        insert_val = (input_vals['name'],
-                      input_vals['description'], input_vals['price'], input_vals['city_id'], input_vals['room_type_id'], user_id, created_by_name)
-        q = MySQLQuery.into(properties).columns(
-            'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by_uid', 'created_by_name').insert(insert_val)
-        cursor.execute(q.get_sql())
-        cursor.close()
-    connection.commit()
-    connection.close()
-    broker_thread = brokerThread(
-        "ds-broker", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}})
-    broker_thread.start()
-
-    return input_vals
-
-# Adds new entry to the User table
-
-
-@ app.route("/api/addNewUser", methods=["POST"])
-def createNewUser():
-    connection = pymysql.connect(**config)
-    with connection.cursor() as cursor:
-        input_json = request.get_json(force=True)
-        users_table = Table('users')
-        input_vals = input_json['userDetails']
-        insert_val = (input_vals['name'], input_vals['email'],
-                      input_vals['phone'], input_vals['roles'], input_vals['uid'])
-        q = MySQLQuery.into(users_table).columns(
-            'name', 'email', 'phone', 'roles', 'uid').insert(insert_val)
-        cursor.execute(q.get_sql())
-        cursor.close()
-    connection.commit()
-    connection.close()
-    return input_vals
-
-# Fetch User Details
-
-
-@app.route("/api/getUserDetail", methods=["GET"])
-@login_required
-def fetchUserDetail(user_id):
-    connection = pymysql.connect(**config)
-    with connection.cursor() as cursor:
-        users_table = Table('users')
-        q = MySQLQuery.from_(users_table).select(
-            'name', 'email', 'phone', 'roles', 'uid').where(users_table.uid == user_id)
-        cursor.execute(q.get_sql())
-        results = cursor.fetchone()
-        cursor.close()
-    connection.close()
-    return {"userDetails": results}
 
 # Manage Subscription list of user
 
@@ -274,58 +188,16 @@ def getAllRoomTypes(user_id):
     return {"roomTypes": roomTypes}
 
 
-@app.route("/api/triggerRapidApi", methods=["GET"])
+@app.route("/api/getUserDetail", methods=["GET"])
 @login_required
-def triggerRapidApi(user_id):
+def fetchUserDetail(user_id):
     connection = pymysql.connect(**config)
     with connection.cursor() as cursor:
-        url = "https://us-real-estate.p.rapidapi.com/v2/for-sale"
-
-        querystring = {"offset": "0", "limit": "20",
-                       "state_code": "NY", "city": "Buffalo", "sort": "newest"}
-
-        headers = {
-            'x-rapidapi-host': "us-real-estate.p.rapidapi.com",
-            'x-rapidapi-key': "794a2152c5msh2b0ef914247c640p165355jsnd8fd78983d6f"
-        }
-
-        response = requests.request(
-            "GET", url, headers=headers, params=querystring)
-        # f = open('input_api.json',)
-        # data = json.load(f)
         users_table = Table('users')
-        q4 = MySQLQuery.from_(users_table).select(
-            'name').where(users_table.uid == user_id)
-        cursor.execute(q4.get_sql())
-        user_obj = cursor.fetchone()
-        created_by_name = user_obj['name']
-        for record in response.json().get("data", {}).get("home_search", {}).get("results", []):
-            insert_rec = {}
-            insert_rec['image_url'] = record.get(
-                "primary_photo", {}).get("href", '').replace("\\", "")
-            insert_rec['price'] = record.get("list_price", 0)
-            if record.get("listing_id", '') != '':
-                insert_rec['listing_id'] = record.get("listing_id", '')
-            insert_rec['city_id'] = 1
-            insert_rec['description'] = record.get(
-                "branding", [])[0].get("name", '')
-            insert_rec['room_type_id'] = record.get(
-                "description", {}).get("beds", 1)
-            insert_rec['name'] = record.get(
-                "location", {}).get("address", {}).get("line", {})
-            properties = Table('properties')
-            insert_val = (insert_rec['name'],
-                          insert_rec['description'], insert_rec['price'], insert_rec['city_id'], insert_rec['room_type_id'], user_id, created_by_name, insert_rec['image_url'])
-            q = MySQLQuery.into(properties).columns(
-                'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by_uid', 'created_by_name', 'image_url').insert(insert_val)
-            cursor.execute(q.get_sql())
+        q = MySQLQuery.from_(users_table).select(
+            'name', 'email', 'phone', 'roles', 'uid').where(users_table.uid == user_id)
+        cursor.execute(q.get_sql())
+        results = cursor.fetchone()
         cursor.close()
-    connection.commit()
     connection.close()
-    return {"success": 1}
-
-
-# Websocket event from Client
-@socketio.on('client-event')
-def handle_my_custom_event(data):
-    print(f"Client Event {data}")
+    return {"userDetails": results}

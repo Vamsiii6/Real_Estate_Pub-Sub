@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
     volumes:
       - ./server/db:/docker-entrypoint-initdb.d/:ro
-  server:
+  publisher:
     build: ./server
     depends_on:
       - db
@@ -33,10 +33,23 @@ services:
     volumes: ["./broker:/broker"]
     restart: unless-stopped
     command: ["flask", "run", "--host=0.0.0.0", "--port=5001"]
+  subscriber:
+    build: ./subscriber
+    depends_on:
+      - db
+    ports:
+      - "5002:5002"
+    environment:
+      FLASK_DEBUG: 1
+      FLASK_APP: ./sub_app.py
+    volumes: ["./subscriber:/subscriber"]
+    restart: unless-stopped
+    command: ["flask", "run", "--host=0.0.0.0", "--port=5002"]
   client:
     build: ./client
     links:
-      - server
+      - publisher
+      - subscriber
     ports:
       - "8080:8080"
     volumes:

@@ -3,7 +3,7 @@ import Vue from 'vue'
 import helper from 'mixins/helper'
 
 const http = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: '',
   headers: {
     'Content-type': 'application/json',
   },

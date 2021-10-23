@@ -144,9 +144,12 @@ export default {
       let valid = await this.$refs['property-form'].validate()
       if (valid) {
         try {
-          let response = await this.$axios.post('/addNewProperty', {
-            properties: propertyModel,
-          })
+          let response = await this.$axios.post(
+            'http://localhost:5000/api/addNewProperty',
+            {
+              properties: propertyModel,
+            }
+          )
           if (response) {
             this.routeToPropertyList()
           }
