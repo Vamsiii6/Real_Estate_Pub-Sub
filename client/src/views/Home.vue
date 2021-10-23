@@ -71,14 +71,23 @@
                 `${userDetails.name}`
               }}</span></el-dropdown-item
             >
-            <el-dropdown-item divided command="my-sub"
+            <el-dropdown-item
+              :divided="(Number(userDetails.roles) & 4) == 4"
+              command="my-sub"
+              v-if="Number(userDetails.roles) & 4"
               ><i class="el-icon-set-up"></i> My Subscriptions</el-dropdown-item
             >
-            <el-dropdown-item command="syncData"
+            <el-dropdown-item
+              command="syncData"
+              v-if="
+                Number(userDetails.roles) & 4 && Number(userDetails.roles) & 2
+              "
               ><i class="el-icon-refresh"></i> Sync Data from
               API</el-dropdown-item
             >
-            <el-dropdown-item command="logout"
+            <el-dropdown-item
+              command="logout"
+              :divided="Number(userDetails.roles) == 2"
               ><i class="el-icon-circle-close"></i> Logout</el-dropdown-item
             >
           </el-dropdown-menu>
@@ -165,6 +174,22 @@ export default {
         helper.authLogout()
       } else if (command == 'my-sub') {
         this.routeToMySubs()
+      } else if (command == 'syncData') {
+        this.fetchDatafromAPI()
+      }
+    },
+    async fetchDatafromAPI() {
+      try {
+        let response = await this.$axios.get('/invokeApi')
+        if (response) {
+          this.$message.success('Data synced from API successfully')
+          this.remountFlag = false
+          this.$nextTick(() => {
+            this.remountFlag = true
+          })
+        }
+      } catch (error) {
+        this.$message.error(error?.message || 'Server Error')
       }
     },
     async fetchUser() {

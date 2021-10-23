@@ -11,6 +11,7 @@ from flask_socketio import SocketIO
 import requests
 import threading
 import time
+import json
 
 # Firebase Instantiation
 if not firebase_admin._apps:
@@ -45,12 +46,8 @@ class brokerThread(threading.Thread):
         self.payload_ = payload_
 
     def run(self):
-        app.logger.info('sleep begin')
         time.sleep(5)
-        app.logger.info('sleep end')
-        # Web socket event to client
-        # socketio.emit('testing-event', {'data': 'foobar'})
-        app.logger.info(self.payload_)
+        # Inform broker about new event
         res = requests.post('http://broker:5001/broker/notify',
                             json=self.payload_, timeout=600)
         app.logger.info(res.json())
@@ -105,31 +102,26 @@ def fetchAllProperty(user_id):
                 q = q.where(False)
             if len(room_type_ids) > 0:
                 q = q.where(properties.room_type_id.isin(room_type_ids))
-            app.logger.info(f"len - {len(city_type_ids)}")
             if len(city_type_ids) > 0:
-                app.logger.info(f"{properties.city_id.isin(city_type_ids)}")
                 q = q.where(properties.city_id.isin(city_type_ids))
             q = q.where((properties.created_by_uid == user_id).negate())
-            app.logger.info(f"Criteria - {q.get_sql()}")
         q_final = q.select('id', 'name', 'description', 'price', 'room_type_id', 'city_id',
                            'image_url', 'created_by_name').orderby('id', order=Order.desc).limit(8).offset((int(page)-1)*8)
         q_count = q.select(functions.Count("id").as_('count'))
-        app.logger.info(q.get_sql())
         cursor.execute(q_final.get_sql())
         results = cursor.fetchall()
         result_ = {"records": results}
-        # app.logger.info(request.args['withcount'])
         if request.args['with_count'] == 'true':
             cursor.execute(q_count.get_sql())
-            app.logger.info(q_count.get_sql())
             count = cursor.fetchone()
             result_['count'] = count['count']
         cursor.close()
     connection.close()
     return result_
 
-
 # Adds new entry to the Property table in the database
+
+
 @ app.route("/api/addNewProperty", methods=["POST"])
 @ login_required
 def createNewProperty(user_id):
@@ -283,21 +275,52 @@ def getAllRoomTypes(user_id):
     return {"roomTypes": roomTypes}
 
 
-@app.route("/api/invokeBroker", methods=["GET"])
-def invokeBroker():
+@app.route("/api/invokeApi", methods=["GET"])
+@login_required
+def invokeBroker(user_id):
     connection = pymysql.connect(**config)
     with connection.cursor() as cursor:
-        properties = Table('properties')
-        q = MySQLQuery.from_(properties).select(
-            'id', 'name', 'description', 'price', 'room_type_id', 'city_id', 'image_url').where(properties.room_type_id.notnull() & properties.city_id.notnull())
-        app.logger.info(q.get_sql())
-        cursor.execute(q.get_sql())
-        results = cursor.fetchall()
-        payload_ = {"properties": results}
-        res = requests.post('http://broker:5001/broker/notify',
-                            json=payload_, timeout=600)
-        app.logger.info(res.json())
+        url = "https://us-real-estate.p.rapidapi.com/v2/for-sale"
+
+        querystring = {"offset": "0", "limit": "20",
+                       "state_code": "NY", "city": "Buffalo", "sort": "newest"}
+
+        headers = {
+            'x-rapidapi-host': "us-real-estate.p.rapidapi.com",
+            'x-rapidapi-key': "794a2152c5msh2b0ef914247c640p165355jsnd8fd78983d6f"
+        }
+
+        # response = requests.request("GET", url, headers=headers, params=querystring)
+        f = open('input_api.json',)
+        data = json.load(f)
+        users_table = Table('users')
+        q4 = MySQLQuery.from_(users_table).select(
+            'name').where(users_table.uid == user_id)
+        cursor.execute(q4.get_sql())
+        user_obj = cursor.fetchone()
+        created_by_name = user_obj['name']
+        for record in data.get("data", {}).get("home_search", {}).get("results", []):
+            insert_rec = {}
+            insert_rec['image_url'] = record.get(
+                "primary_photo", {}).get("href", '').replace("\\", "")
+            insert_rec['price'] = record.get("list_price", 0)
+            if record.get("listing_id", '') != '':
+                insert_rec['listing_id'] = record.get("listing_id", '')
+            insert_rec['city_id'] = 1
+            insert_rec['description'] = record.get(
+                "branding", [])[0].get("name", '')
+            insert_rec['room_type_id'] = record.get(
+                "description", {}).get("beds", 1)
+            insert_rec['name'] = record.get(
+                "location", {}).get("address", {}).get("line", {})
+            properties = Table('properties')
+            insert_val = (insert_rec['name'],
+                          insert_rec['description'], insert_rec['price'], insert_rec['city_id'], insert_rec['room_type_id'], user_id, created_by_name, insert_rec['image_url'])
+            q = MySQLQuery.into(properties).columns(
+                'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by_uid', 'created_by_name', 'image_url').insert(insert_val)
+            cursor.execute(q.get_sql())
         cursor.close()
+    connection.commit()
     connection.close()
     return {"success": 1}
 

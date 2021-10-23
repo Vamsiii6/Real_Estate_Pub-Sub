@@ -44,16 +44,7 @@ INSERT INTO `room_type` (`type`) VALUES ('2 BHK');
 INSERT INTO `room_type` (`type`) VALUES ('3 BHK');
 INSERT INTO `room_type` (`type`) VALUES ('4 BHK');
 INSERT INTO `room_type` (`type`) VALUES ('5 BHK');
-
-CREATE TABLE `location` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
-  `address_line1` varchar(255),
-  `address_line2` varchar(255),
-  `city` bigint,
-  `state` varchar(255),
-  `zip_code` varchar(255),
-  `created_at` varchar(255)
-);
+INSERT INTO `room_type` (`type`) VALUES ('6 BHK');
 
 CREATE TABLE `user_cities_rel` (
   `id` int PRIMARY KEY AUTO_INCREMENT,

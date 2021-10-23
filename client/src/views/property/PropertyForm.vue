@@ -22,7 +22,7 @@
       :model="formModel"
       ref="property-form"
     >
-      <el-form-item class="mt-10 mb-10 w-full" label="Name" prop="name">
+      <el-form-item class="mt-10 mb-10 w-full" label="Address" prop="name">
         <el-input v-model="formModel.name" class="w-full"></el-input>
       </el-form-item>
       <el-form-item class="mt-10 mb-10 w-full" label="Price" prop="price">
