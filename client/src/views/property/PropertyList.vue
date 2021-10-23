@@ -11,11 +11,28 @@
         >Add New Property</el-button
       >
     </div>
-    <div
-      v-if="loading"
-      class="flex flex-row justify-center items-center h-full"
-    >
-      <div class="font-extrabold text-xl">Loading...</div>
+    <div v-if="loading" class="h-full grid grid-cols-4 gap-6 mt-10">
+      <el-skeleton
+        v-for="i in [1, 2, 3, 4, 5, 6, 7, 8]"
+        :key="i"
+        animated
+        class="w-80"
+      >
+        <template slot="template">
+          <el-skeleton-item :variant="'image'" style="height: 150px" />
+          <div class="p-3">
+            <el-skeleton-item variant="p" />
+            <div class="flex">
+              <el-skeleton-item variant="text" class="w-1/2 mr-3" />
+              <el-skeleton-item variant="text" class="w-1/2" />
+            </div>
+            <div class="flex mt-3">
+              <el-skeleton-item variant="text" class="w-1/2 mr-3" />
+              <el-skeleton-item variant="text" class="w-1/2" />
+            </div>
+          </div>
+        </template>
+      </el-skeleton>
     </div>
     <div
       v-else-if="$_.isEmpty(allProperty)"
@@ -95,6 +112,7 @@
         layout="prev, pager, next"
         @current-change="propertiesNext"
         :total="total"
+        :page-size="8"
       >
       </el-pagination>
     </div>
