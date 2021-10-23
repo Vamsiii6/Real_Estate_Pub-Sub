@@ -39,7 +39,7 @@
           class="w-full"
         >
           <el-option
-            v-for="city in allCites"
+            v-for="city in filteredCities"
             :key="city.id"
             :label="city.name"
             :value="city.id"
@@ -58,7 +58,7 @@
           class="w-full"
         >
           <el-option
-            v-for="type in allRoomTypes"
+            v-for="type in filteredRoomTypes"
             :key="type.id"
             :label="type.type"
             :value="type.id"
@@ -106,9 +106,15 @@ export default {
         },
       ],
     },
+    advCities: [],
+    advRoomTypes: [],
   }),
   created() {
-    let promises = [this.fetchCities(), this.fetchRoomTypes()]
+    let promises = [
+      this.fetchCities(),
+      this.fetchRoomTypes(),
+      this.fetchAllAds(),
+    ]
     this.loading = true
     Promise.all(promises).then(() => {
       this.loading = false
@@ -119,8 +125,37 @@ export default {
       allCites: (state) => state.allCities,
       allRoomTypes: (state) => state.allRoomTypes,
     }),
+    filteredCities() {
+      let { advCities } = this
+      if (!this.$_.isEmpty(advCities)) {
+        return this.allCites.filter((r) => this.advCities.includes(r.id))
+      }
+      return this.allCites
+    },
+    filteredRoomTypes() {
+      let { advRoomTypes } = this
+      if (!this.$_.isEmpty(advRoomTypes)) {
+        return this.allRoomTypes.filter((r) => this.advRoomTypes.includes(r.id))
+      }
+      return this.allRoomTypes
+    },
   },
   methods: {
+    async fetchAllAds() {
+      try {
+        let response = await this.$axios.get(
+          'http://localhost:5000/api/getAllAvertisements'
+        )
+        if (response?.data) {
+          this.advCities = (response?.data?.cities || []).map((r) => r.city_id)
+          this.advRoomTypes = (response?.data?.room_types || []).map(
+            (r) => r.room_type_id
+          )
+        }
+      } catch (error) {
+        this.$message.error(error?.message || 'Server Error')
+      }
+    },
     async fetchCities() {
       try {
         await this.$store.dispatch('getCities')
@@ -145,7 +180,7 @@ export default {
       if (valid) {
         try {
           let response = await this.$axios.post(
-            'http://localhost:5000/api/addNewProperty',
+            'http://localhost:5000/api/publishProperty',
             {
               properties: propertyModel,
             }

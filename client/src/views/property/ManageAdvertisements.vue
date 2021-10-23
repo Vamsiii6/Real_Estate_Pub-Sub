@@ -3,18 +3,18 @@
     <el-skeleton :rows="6" variant="rect" animated></el-skeleton>
   </div>
   <div v-else>
-    <div class="h1-bold">My Subscriptions</div>
+    <div class="h1-bold">Manage Advertisements</div>
     <el-transfer
       class="mt-10 custom-transfer-panel"
       v-model="selectedCities"
       filterable
-      :titles="['Available Cities', 'Subscribed Cities']"
+      :titles="['Available Cities', 'My Cities']"
       :props="{
         key: 'id',
         label: 'name',
       }"
       :data="allCities"
-      :button-texts="['Unsubscribe', 'Subscribe']"
+      :button-texts="['Deadvertise', 'Advertise']"
       @change="handleChange"
     >
     </el-transfer>
@@ -22,13 +22,13 @@
       class="mt-10 custom-transfer-panel"
       v-model="selectedRoomTypes"
       filterable
-      :titles="['Available Room Types', 'Subscribed Room Types']"
+      :titles="['Available Room Types', 'My Room Types']"
       :props="{
         key: 'id',
         label: 'type',
       }"
       :data="allRoomTypes"
-      :button-texts="['Unsubscribe', 'Subscribe']"
+      :button-texts="['Deadvertise', 'Advertise']"
       @change="handleChange"
     >
     </el-transfer>
@@ -45,7 +45,7 @@ export default {
   }),
   mounted() {
     let promises = [
-      this.fetchAllSubscriptions(),
+      this.fetchAllAds(),
       this.fetchCities(),
       this.fetchRoomTypes(),
     ]
@@ -55,13 +55,12 @@ export default {
       this.allRoomTypes = this.$_.clone(this.$store.state.allRoomTypes)
       this.loading = false
     })
-    // this.apiData()
   },
   methods: {
-    async fetchAllSubscriptions() {
+    async fetchAllAds() {
       try {
         let response = await this.$axios.get(
-          'http://localhost:5002/api/getAllSubscriptions'
+          'http://localhost:5000/api/getAllAvertisements'
         )
         if (response?.data) {
           this.selectedCities = (response?.data?.cities || []).map(
@@ -89,19 +88,21 @@ export default {
         this.$message.error(error?.message || 'Server Error')
       }
     },
-    async manageSubscriptions(direction) {
+    async manageAdvertisements(direction) {
       try {
         let response = await this.$axios.post(
-          'http://localhost:5002/api/manageSubscriptions',
+          'http://localhost:5000/api/manageAdvertisements',
           {
-            user_cities_rel: this.selectedCities,
-            user_room_types_rel: this.selectedRoomTypes,
+            adv_cities_rel: this.selectedCities,
+            adv_room_types_rel: this.selectedRoomTypes,
           }
         )
         if (response?.data) {
           this.$message.success(
             `${
-              direction == 'right' ? 'Subscribed' : 'Unsubscribed'
+              direction == 'right'
+                ? 'Advertisement data added'
+                : 'Deadvertisement data removed'
             } successfully`
           )
         }
@@ -111,7 +112,7 @@ export default {
     },
     handleChange(value, direction, movedKeys) {
       console.log(value, direction, movedKeys)
-      this.manageSubscriptions(direction)
+      this.manageAdvertisements(direction)
     },
   },
 }

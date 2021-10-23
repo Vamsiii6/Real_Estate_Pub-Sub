@@ -26,6 +26,11 @@ const routes = [
         name: 'MySubs',
         component: () => import('../views/property/MySubscriptions.vue'),
       },
+      {
+        path: 'myadvs',
+        name: 'MyAdvs',
+        component: () => import('../views/property/ManageAdvertisements.vue'),
+      },
     ],
   },
   {

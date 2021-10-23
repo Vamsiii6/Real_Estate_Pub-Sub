@@ -21,7 +21,6 @@ CREATE TABLE `properties` (
   `price` bigint,
   `city_id` bigint,
   `room_type_id` bigint,
-  `add_info` bigint,
   `created_by_uid` varchar(255),
   `created_by_name` varchar(255),
   `created_at` timestamp,
@@ -33,6 +32,7 @@ CREATE TABLE `cities` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255)
 );
+
 INSERT INTO `cities` (`name`) VALUES ('Buffalo');
 INSERT INTO `cities` (`name`) VALUES ('Syracuse');
 INSERT INTO `cities` (`name`) VALUES ('Albany');
@@ -57,6 +57,18 @@ CREATE TABLE `user_cities_rel` (
 );
 
 CREATE TABLE `user_room_types_rel` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `uid` varchar(255),
+  `room_type_id` bigint
+);
+
+CREATE TABLE `adv_cities_rel` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `uid` varchar(255),
+  `city_id` bigint
+);
+
+CREATE TABLE `adv_room_types_rel` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `uid` varchar(255),
   `room_type_id` bigint

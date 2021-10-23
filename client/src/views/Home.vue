@@ -75,19 +75,23 @@
               :divided="(Number(userDetails.roles) & 4) == 4"
               command="my-sub"
               v-if="Number(userDetails.roles) & 4"
-              ><i class="el-icon-set-up"></i> My Subscriptions</el-dropdown-item
+              ><i class="el-icon-set-up"></i> Manage
+              Subscriptions</el-dropdown-item
+            >
+            <el-dropdown-item
+              :divided="Number(userDetails.roles) == 2"
+              command="my-adv"
+              v-if="Number(userDetails.roles) & 2"
+              ><i class="el-icon-postcard"></i> Manage
+              Advertisements</el-dropdown-item
             >
             <el-dropdown-item
               command="syncData"
-              v-if="
-                Number(userDetails.roles) & 4 && Number(userDetails.roles) & 2
-              "
+              v-if="userDetails.uid == 'VwioudRBkCZFvEyNXmNKK7qHZpy1'"
               ><i class="el-icon-refresh"></i> Sync Data from
               API</el-dropdown-item
             >
-            <el-dropdown-item
-              command="logout"
-              :divided="Number(userDetails.roles) == 2"
+            <el-dropdown-item command="logout"
               ><i class="el-icon-circle-close"></i> Logout</el-dropdown-item
             >
           </el-dropdown-menu>
@@ -128,21 +132,32 @@ export default {
       const socket = io('http://localhost:5001/')
       if (this.userDetails?.uid) {
         socket.on(`socket-${this.userDetails?.uid}`, (...args) => {
-          let message = `Property <b>${this.$_.get(
-            args,
-            '[0].property.name'
-          )}</b> was added by <b>${this.$_.get(args, '[0].publisher')}</b>`
-          message += `<br><br>For topic:`
-          let city = this.$_.get(args, '[0].topic_meta.city')
-          let room_type = this.$_.get(args, '[0].topic_meta.room_type')
-          if (!this.$_.isEmpty(city)) {
-            message += `<br>City: <b>${city}</b>`
-          }
-          if (!this.$_.isEmpty(room_type)) {
-            message += `<br>Room Type: <b>${room_type}</b>`
+          let message = ``
+          let title = ``
+          if (this.$_.get(args, '[0].mode') == 'bulk') {
+            title = 'New Listing(s)'
+            message = `<b>${this.$_.get(
+              args,
+              '[0].publisher'
+            )}</b> has added few listings for your topics`
+          } else {
+            title = 'New Listing'
+            message = `Property <b>${this.$_.get(
+              args,
+              '[0].property.name'
+            )}</b> was added by <b>${this.$_.get(args, '[0].publisher')}</b>`
+            message += `<br><br>For topic:`
+            let city = this.$_.get(args, '[0].topic_meta.city')
+            let room_type = this.$_.get(args, '[0].topic_meta.room_type')
+            if (!this.$_.isEmpty(city)) {
+              message += `<br>City: <b>${city}</b>`
+            }
+            if (!this.$_.isEmpty(room_type)) {
+              message += `<br>Room Type: <b>${room_type}</b>`
+            }
           }
           this.$notify.info({
-            title: 'New Listing',
+            title: title,
             dangerouslyUseHTMLString: true,
             message,
             duration: 0,
@@ -169,11 +184,16 @@ export default {
     routeToMySubs() {
       this.$router.push({ name: 'MySubs' })
     },
+    routeToMyAdvs() {
+      this.$router.push({ name: 'MyAdvs' })
+    },
     handleDropDownCommand(command) {
       if (command == 'logout') {
         helper.authLogout()
       } else if (command == 'my-sub') {
         this.routeToMySubs()
+      } else if (command == 'my-adv') {
+        this.routeToMyAdvs()
       } else if (command == 'syncData') {
         this.fetchDatafromAPI()
       }
