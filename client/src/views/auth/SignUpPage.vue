@@ -23,8 +23,8 @@
       <div class="mt-5">
         Roles
         <el-checkbox-group v-model="userModel.roles" class="mt-3">
-          <el-checkbox label="Seller"></el-checkbox>
-          <el-checkbox label="Buyer"></el-checkbox>
+          <el-checkbox label="Publisher"></el-checkbox>
+          <el-checkbox label="Subscriber"></el-checkbox>
         </el-checkbox-group>
       </div>
       <div class="flex items-center flex-col mt-10">
@@ -65,10 +65,10 @@ export default {
         if (response.user) {
           let rolesSum = 0
           for (let index in this.userModel.roles) {
-            if (this.userModel.roles[index] == 'Seller') {
+            if (this.userModel.roles[index] == 'Publisher') {
               rolesSum += 2
             }
-            if (this.userModel.roles[index] == 'Buyer') {
+            if (this.userModel.roles[index] == 'Subscriber') {
               rolesSum += 4
             }
           }

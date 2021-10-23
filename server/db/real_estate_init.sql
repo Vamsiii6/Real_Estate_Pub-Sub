@@ -10,6 +10,10 @@ CREATE TABLE `users` (
   `created_at` timestamp
 );
 
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Admin', 'admin@rps.com', 'Admin', '6', 'VwioudRBkCZFvEyNXmNKK7qHZpy1');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Publisher 1', 'publisher1@rps.com', 'Publisher 1', '2', 'IOxyt7H2ytMouuekKiKELoykGKH2');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 1', 'subscriber1@rps.com', 'Subscriber 1', '4', 'XJxTONpve7hwXPz90pmMq7HAEFz1');
+
 CREATE TABLE `properties` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255),
