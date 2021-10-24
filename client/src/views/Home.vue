@@ -200,12 +200,14 @@ export default {
     },
     async fetchDatafromAPI() {
       try {
+        this.loading = true
         let response = await this.$axios.get(
           `http://localhost:${this.$store.state.port}/api/triggerRapidApi`
         )
         if (response) {
           this.$message.success('Data synced from API successfully')
           this.remountFlag = false
+          this.loading = false
           this.$nextTick(() => {
             this.remountFlag = true
           })

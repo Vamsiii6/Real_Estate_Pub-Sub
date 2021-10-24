@@ -45,9 +45,12 @@ def notifyUsers():
         cursor.execute(q6.get_sql())
         room_type = cursor.fetchone()
         final_tuple = (*result1, *result2, *result3)
+        app.logger.info(f"{result1} {result2} {result3}")
+        app.logger.info(final_tuple)
+        informed_user = []
         if len(final_tuple) > 0:
             for user in final_tuple:
-                if user == p['created_by_uid']:
+                if user == p['created_by_uid'] or user['uid'] in informed_user:
                     continue
                 payload = {'property': p, 'publisher': p['created_by_name']}
                 if user in result1:
@@ -59,6 +62,7 @@ def notifyUsers():
                     payload['topic_meta'] = {'room_type': room_type['type']}
                 try:
                     socketio.emit(f"socket-{user['uid']}", payload)
+                    informed_user.append(user['uid'])
                 except:
                     app.logger.info(f"{user['uid']} - User not active")
         cursor.close()
@@ -89,13 +93,16 @@ def notifyBulk():
             cursor.execute(q3)
             result3 = cursor.fetchall()
             final_tuple = (*final_tuple, *result1, *result3)
+        app.logger.info(f"{final_tuple}")
+        informed_user = []
         if len(final_tuple) > 0:
             for user in final_tuple:
-                if user == uid_:
+                if user == uid_ or user['uid'] in informed_user:
                     continue
                 payload = {'publisher': user_name, "mode": "bulk"}
                 try:
                     socketio.emit(f"socket-{user['uid']}", payload)
+                    informed_user.append(user['uid'])
                 except:
                     app.logger.info(f"{user['uid']} - User not active")
         cursor.close()

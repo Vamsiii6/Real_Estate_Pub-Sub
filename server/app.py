@@ -40,7 +40,6 @@ class brokerThread(threading.Thread):
         self.url = url
 
     def run(self):
-        time.sleep(5)
         # Inform broker about new event
         res = requests.post(f"http://broker:5001/broker/{self.url}",
                             json=self.payload_, timeout=600)
@@ -328,7 +327,7 @@ def getAllRoomTypes(user_id):
     connection.close()
     return {"roomTypes": roomTypes}
 
-# Trigger real api to fetch and sync data.
+# Trigger real time api to fetch and sync data.
 
 
 @app.route("/api/triggerRapidApi", methods=["GET"])
@@ -383,7 +382,6 @@ def triggerRapidApi(user_id):
                 'id').where(properties.listing_id == insert_rec['listing_id'])
             cursor.execute(q_p.get_sql())
             prop_obj = cursor.fetchone()
-            app.logger.info(prop_obj)
             if prop_obj == None:
                 cursor.execute(q.get_sql())
                 if not insert_rec['room_type_id'] in inserted_room_types:
