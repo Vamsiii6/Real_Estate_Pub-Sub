@@ -37,8 +37,11 @@ INSERT INTO `cities` (`name`) VALUES ('Buffalo');
 INSERT INTO `cities` (`name`) VALUES ('Syracuse');
 INSERT INTO `cities` (`name`) VALUES ('Albany');
 INSERT INTO `cities` (`name`) VALUES ('NYC');
-INSERT INTO `cities` (`name`) VALUES ('New Jersey');
+INSERT INTO `cities` (`name`) VALUES ('Lancaster');
+INSERT INTO `cities` (`name`) VALUES ('Niagara Falls');
+INSERT INTO `cities` (`name`) VALUES ('Newark');
 INSERT INTO `cities` (`name`) VALUES ('Philadelphia');
+INSERT INTO `cities` (`name`) VALUES ('Boston');
 
 CREATE TABLE `room_type` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
@@ -84,8 +87,12 @@ CREATE TABLE `broker_vs_topics` (
 
 INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5005','1');
 INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5005','2');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','3');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5005','3');
 INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','4');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','5');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','6');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','5');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','6');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','7');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','8');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','9');
 INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5008','1');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5008','4');

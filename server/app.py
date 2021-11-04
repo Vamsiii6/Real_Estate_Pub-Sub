@@ -30,6 +30,7 @@ app.config['PROPAGATE_EXCEPTIONS'] = False
 
 
 # Seperate thread to communicate with broker container
+# ports in __init__ has the list equivalent to EN(e)
 class brokerThread(threading.Thread):
     def __init__(self, name, payload_, url, ports):
         threading.Thread.__init__(self)
