@@ -374,7 +374,6 @@ def triggerRapidApi(user_id):
         # for record in data.get("data", {}).get("home_search", {}).get("results", []):
         for record in response.json().get("data", {}).get("home_search", {}).get("results", []):
             insert_rec = {}
-            app.logger.info(record)
             record = dict(record)
             insert_rec['image_url'] = (record.get(
                 "primary_photo", {}) or {}).get("href", '').replace("\\", "")
@@ -403,9 +402,14 @@ def triggerRapidApi(user_id):
                 cursor.execute(q.get_sql())
                 if not insert_rec['room_type_id'] in inserted_room_types:
                     inserted_room_types.append(insert_rec['room_type_id'])
+        bt_table = Table('broker_vs_topics')
+        q_b = MySQLQuery.from_(bt_table).select('broker_port').where(
+            bt_table.topic_id == 1).orderby('broker_port', order=Order.asc)
+        cursor.execute(q_b.get_sql())
+        available_brokers = cursor.fetchall()
         if len(inserted_room_types) > 0:
             broker_thread = brokerThread(
-                "ds-broker-bulk", {"city_id": 1, "room_types": inserted_room_types, "uid": user_id, "user_name": created_by_name}, "notifyBulk")
+                "ds-broker-bulk", {"city_id": 1, "room_types": inserted_room_types, "uid": user_id, "user_name": created_by_name}, "notifyBulk", available_brokers)
             broker_thread.start()
         cursor.close()
     connection.commit()
@@ -437,6 +441,8 @@ def manageBrokerTopics(user_id):
     connection.commit()
     connection.close()
     return {"done": 1}
+
+# Get all Broker topics
 
 
 @app.route("/api/getAllBrokerTopics", methods=["GET"])

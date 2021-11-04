@@ -46,12 +46,11 @@ def notifyUsers():
         cursor.execute(q6.get_sql())
         room_type = cursor.fetchone()
         server_name = request.host
-        app.logger.info(f"Broker Port {request.host} {server_name}")
         sn_port = None
         if server_name:
             sn_host, temp_, sn_port = server_name.partition(":")
         payload = {"users_list": {"type": result1, "city": result2, "both": result3}, "topic_meta": {
-            'city': city['name'], 'room_type': room_type['type']}, "broker_port": sn_port, "property": p}
+            'city': city['name'], 'room_type': room_type['type']}, "broker_port": sn_port, "property": p, "mode": "single"}
         requests.post(f"http://subscriber:5002/api/notifySubscriber",
                       json=payload, timeout=600)
         cursor.close()
@@ -82,17 +81,14 @@ def notifyBulk():
             cursor.execute(q3)
             result3 = cursor.fetchall()
             final_tuple = (*final_tuple, *result1, *result3)
-        informed_user = []
-        if len(final_tuple) > 0:
-            for user in final_tuple:
-                if user == uid_ or user['uid'] in informed_user:
-                    continue
-                payload = {'publisher': user_name, "mode": "bulk"}
-                try:
-                    socketio.emit(f"socket-{user['uid']}", payload)
-                    informed_user.append(user['uid'])
-                except:
-                    app.logger.info(f"{user['uid']} - User not active")
+        server_name = request.host
+        sn_port = None
+        if server_name:
+            sn_host, temp_, sn_port = server_name.partition(":")
+        payload = {"users_list": {"type": result1, "city": result2, "both": result3},
+                   "publisher": {"uid": uid_, "name": user_name}, "broker_port": sn_port, "mode": "bulk"}
+        requests.post(f"http://subscriber:5002/api/notifySubscriber",
+                      json=payload, timeout=600)
         cursor.close()
     connection.close()
     return {"response": "success"}

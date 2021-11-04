@@ -159,6 +159,8 @@ def getAllSubscriptions(user_id):
     connection.close()
     return {"cities": cities_rel, "room_types": rooms_rel}
 
+# Fetch all cities
+
 
 @app.route("/api/getAllCities", methods=["GET"])
 @login_required
@@ -173,6 +175,8 @@ def getAllCities(user_id):
     connection.close()
     return {"cities": cities}
 
+# Fetch all room types
+
 
 @app.route("/api/getAllRoomTypes", methods=["GET"])
 @login_required
@@ -186,6 +190,8 @@ def getAllRoomTypes(user_id):
         cursor.close()
     connection.close()
     return {"roomTypes": roomTypes}
+
+# Fetch User Details from Database
 
 
 @app.route("/api/getUserDetail", methods=["GET"])
@@ -202,32 +208,43 @@ def fetchUserDetail(user_id):
     connection.close()
     return {"userDetails": results}
 
+# Web socket emit to client to inform about new events
+
 
 @app.route("/api/notifySubscriber", methods=["POST"])
 def notifySubscriber():
     input_json = request.get_json(force=True)
-    app.logger.info(input_json)
     informed_user = []
     results_map = input_json["users_list"]
-    topic_meta = input_json["topic_meta"]
-    property_info = input_json["property"]
     result1 = results_map["type"]
     result2 = results_map["city"]
     result3 = results_map["both"]
+    mode = input_json["mode"]
     final_tuple = (*result1, *result2, *result3)
     if len(final_tuple) > 0:
         for user in final_tuple:
-            if user == property_info['created_by_uid'] or user['uid'] in informed_user:
-                continue
-            payload = {'property': property_info,
-                       'publisher': property_info['created_by_name']}
-            if user in result1:
-                payload['topic_meta'] = {
-                    'city': topic_meta['city'], 'room_type': topic_meta['room_type']}
-            elif user in result2:
-                payload['topic_meta'] = {'city': topic_meta['city']}
+            payload = {}
+            if mode == 'bulk':
+                publisher = input_json["publisher"]
+                payload = {
+                    'publisher': publisher['name'], "mode": "bulk"}
+                if user == publisher['uid'] or user['uid'] in informed_user:
+                    continue
             else:
-                payload['topic_meta'] = {'room_type': topic_meta['room_type']}
+                topic_meta = input_json["topic_meta"]
+                property_info = input_json["property"]
+                payload = {'property': property_info,
+                           'publisher': property_info['created_by_name']}
+                if user == property_info['created_by_uid'] or user['uid'] in informed_user:
+                    continue
+                if user in result1:
+                    payload['topic_meta'] = {
+                        'city': topic_meta['city'], 'room_type': topic_meta['room_type']}
+                elif user in result2:
+                    payload['topic_meta'] = {'city': topic_meta['city']}
+                else:
+                    payload['topic_meta'] = {
+                        'room_type': topic_meta['room_type']}
             try:
                 payload["broker"] = input_json["broker_port"]
                 socketio.emit(f"socket-{user['uid']}", payload)

@@ -83,9 +83,7 @@ export default {
           })
         }
       } catch (error) {
-        let { message } = error || {}
-        console.log(error)
-        this.$message.error(message || 'Signup Failed')
+        this.$message.error(error?.message || 'Signup Failed')
       }
     },
     redirectToLoginPage() {

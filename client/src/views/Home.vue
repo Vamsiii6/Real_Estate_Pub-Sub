@@ -146,6 +146,10 @@ export default {
               args,
               '[0].publisher'
             )}</b> has added few listings for your topics`
+            let broker = this.$_.get(args, '[0].broker')
+            if (!this.$_.isEmpty(broker)) {
+              message += `<br>Broker: <b>${broker}</b>`
+            }
           } else {
             title = 'New Listing'
             message = `Property <b>${this.$_.get(

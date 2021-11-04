@@ -117,8 +117,6 @@ export default {
           'http://localhost:5000/api/getAllBrokerTopics'
         )
         if (response?.data) {
-          console.log(response?.data?.broker_topics)
-
           this.broker1 = (response?.data?.broker_topics || [])
             .filter((r) => r.broker_port == 5005)
             .map((r) => r.topic_id)

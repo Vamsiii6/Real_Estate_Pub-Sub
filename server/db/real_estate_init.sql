@@ -81,3 +81,11 @@ CREATE TABLE `broker_vs_topics` (
   `broker_port` varchar(255),
   `topic_id` bigint
 );
+
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5005','1');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5005','2');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','3');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','4');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','5');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','6');
+INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5008','1');
