@@ -6,8 +6,8 @@
 <script>
 export default {
   mounted() {
-    if (this.$route.name === 'Home') {
-      this.$router.push({ name: 'PropertyList' })
+    if (['App'].includes(this.$route.name)) {
+      this.$router.push({ name: 'PropertyList', params: { type: 'all' } })
     }
   },
 }

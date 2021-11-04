@@ -8,8 +8,6 @@ import pymysql.cursors
 from flask_socketio import SocketIO
 import requests
 import threading
-import time
-
 # Firebase Instantiation
 if not firebase_admin._apps:
     cred = credentials.Certificate(
@@ -33,17 +31,29 @@ app.config['PROPAGATE_EXCEPTIONS'] = False
 
 # Seperate thread to communicate with broker container
 class brokerThread(threading.Thread):
-    def __init__(self, name, payload_, url):
+    def __init__(self, name, payload_, url, ports):
         threading.Thread.__init__(self)
         self.name = name
         self.payload_ = payload_
         self.url = url
+        self.ports = ports
 
     def run(self):
         # Inform broker about new event
-        res = requests.post(f"http://broker:5001/broker/{self.url}",
-                            json=self.payload_, timeout=600)
-        app.logger.info(res.json())
+        portVsServer = {"5005": 1, "5006": 2, "5007": 3,  "5008": 4}
+        if self.ports == None or len(self.ports) == 0:
+            app.logger.error("No Broker available for the topic")
+        for port in self.ports:
+            try:
+                current_port = port['broker_port']
+                res = requests.post(f"http://broker{portVsServer[current_port]}:{port['broker_port']}/broker/{self.url}",
+                                    json=self.payload_, timeout=600)
+                if res:
+                    app.logger.info("Break Loop")
+                    break
+            except Exception as err:
+                app.logger.error(f"Warning {err}")
+                pass
 
 
 # Decorator for API Auth validation using Firebase auth manager
@@ -134,11 +144,16 @@ def createNewProperty(user_id):
         q = MySQLQuery.into(properties).columns(
             'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by_uid', 'created_by_name').insert(insert_val)
         cursor.execute(q.get_sql())
+        bt_table = Table('broker_vs_topics')
+        q_b = MySQLQuery.from_(bt_table).select('broker_port').where(
+            bt_table.topic_id == input_vals['city_id']).orderby('broker_port', order=Order.asc)
+        cursor.execute(q_b.get_sql())
+        available_brokers = cursor.fetchall()
         cursor.close()
     connection.commit()
     connection.close()
     broker_thread = brokerThread(
-        "ds-broker", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}}, "notify")
+        "ds-broker", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}}, "notify", available_brokers)
     broker_thread.start()
 
     return input_vals
@@ -359,16 +374,18 @@ def triggerRapidApi(user_id):
         # for record in data.get("data", {}).get("home_search", {}).get("results", []):
         for record in response.json().get("data", {}).get("home_search", {}).get("results", []):
             insert_rec = {}
-            insert_rec['image_url'] = record.get(
-                "primary_photo", {}).get("href", '').replace("\\", "")
+            app.logger.info(record)
+            record = dict(record)
+            insert_rec['image_url'] = (record.get(
+                "primary_photo", {}) or {}).get("href", '').replace("\\", "")
             insert_rec['price'] = record.get("list_price", 0)
             if record.get("listing_id", '') != '':
                 insert_rec['listing_id'] = record.get("listing_id", '')
             insert_rec['city_id'] = 1
             insert_rec['description'] = record.get(
                 "branding", [])[0].get("name", '')
-            insert_rec['room_type_id'] = record.get(
-                "description", {}).get("beds", 1)
+            insert_rec['room_type_id'] = (record.get(
+                "description", {}) or {}).get("beds", 1)
             insert_rec['name'] = record.get(
                 "location", {}).get("address", {}).get("line", {})
             insert_rec['listing_id'] = record.get(
@@ -394,3 +411,44 @@ def triggerRapidApi(user_id):
     connection.commit()
     connection.close()
     return {"success": 1}
+
+
+# Manage Broker Topics
+@app.route("/api/manageBrokerTopics", methods=["POST"])
+@login_required
+def manageBrokerTopics(user_id):
+    connection = pymysql.connect(**config)
+    with connection.cursor() as cursor:
+        input_json = request.get_json(force=True)
+        broker_topics = input_json['brokerVsTopics']
+        bt_table = Table('broker_vs_topics')
+        q_del1 = MySQLQuery.from_(bt_table).delete().where(
+            bt_table.id > 0)
+        cursor.execute(q_del1.get_sql())
+        if len(broker_topics) > 0:
+            q1 = MySQLQuery.into(bt_table).columns(
+                'broker_port', 'topic_id')
+            for key in broker_topics:
+                for city in broker_topics[key]:
+                    insert_val = (key, city)
+                    q1 = q1.insert(insert_val)
+            cursor.execute(q1.get_sql())
+        cursor.close()
+    connection.commit()
+    connection.close()
+    return {"done": 1}
+
+
+@app.route("/api/getAllBrokerTopics", methods=["GET"])
+@login_required
+def getAllBrokerTopics(user_id):
+    connection = pymysql.connect(**config)
+    with connection.cursor() as cursor:
+        bt_table = Table('broker_vs_topics')
+        q1 = MySQLQuery.from_(bt_table).select('broker_port', 'topic_id').where(
+            bt_table.id > 0)
+        cursor.execute(q1.get_sql())
+        bt_result = cursor.fetchall()
+        cursor.close()
+    connection.close()
+    return {"broker_topics": bt_result}

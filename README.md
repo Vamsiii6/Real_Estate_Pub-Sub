@@ -8,7 +8,7 @@ In the Real Estate Pub/Sub System, when a user subscribes to topics, the system 
 
 1. Install Docker from the link based on your system preference ([https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/))
 2. Open Terminal and switch to the parent path of the downloaded source code(real_estate_pub_sub)
-3. This project uses ports 8080, 5000,5001,5002, and 3003 on your local system hence ensure these ports are free. In case they are used already use `lsof -i :<port number>` and kill the running port using `kill -9 <PID>` command from the terminal.
+3. This project uses ports 8080, 5000,5005,5002, and 3003 on your local system hence ensure these ports are free. In case they are used already use `lsof -i :<port number>` and kill the running port using `kill -9 <PID>` command from the terminal.
 4. Hit `docker compose up` command to start the build and deploy the image
 
 You find these images created for the client, publisher, subscriber, and database when you run `docker ps` command
@@ -56,7 +56,7 @@ You can log in using the above credentials. You can also Sign up as a new user.
   - Subscribe/Unsubscribe
   - Subscribers Properties list (Based on topics he has subscribed)
 
-**Broker Container(Port: 5001)**
+**Broker Container(Port: 5005)**
 
 - We’re implementing a centralized broker in our real estate pub/sub-model.
 - The broker is responsible for filtering the data published by the publisher or External Data source and notifying the subscriber based on their subscriptions.

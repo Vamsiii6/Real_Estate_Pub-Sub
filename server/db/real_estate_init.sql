@@ -75,3 +75,9 @@ CREATE TABLE `adv_room_types_rel` (
   `uid` varchar(255),
   `room_type_id` bigint
 );
+
+CREATE TABLE `broker_vs_topics` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `broker_port` varchar(255),
+  `topic_id` bigint
+);

@@ -3,6 +3,7 @@ from flask_cors import CORS
 from pypika import Table, MySQLQuery
 import pymysql.cursors
 from flask_socketio import SocketIO
+import requests
 
 # Flask with cors
 app = Flask(__name__)
@@ -44,27 +45,15 @@ def notifyUsers():
             'type').where(room_type_table.id == p['room_type_id'])
         cursor.execute(q6.get_sql())
         room_type = cursor.fetchone()
-        final_tuple = (*result1, *result2, *result3)
-        app.logger.info(f"{result1} {result2} {result3}")
-        app.logger.info(final_tuple)
-        informed_user = []
-        if len(final_tuple) > 0:
-            for user in final_tuple:
-                if user == p['created_by_uid'] or user['uid'] in informed_user:
-                    continue
-                payload = {'property': p, 'publisher': p['created_by_name']}
-                if user in result1:
-                    payload['topic_meta'] = {
-                        'city': city['name'], 'room_type': room_type['type']}
-                elif user in result2:
-                    payload['topic_meta'] = {'city': city['name']}
-                else:
-                    payload['topic_meta'] = {'room_type': room_type['type']}
-                try:
-                    socketio.emit(f"socket-{user['uid']}", payload)
-                    informed_user.append(user['uid'])
-                except:
-                    app.logger.info(f"{user['uid']} - User not active")
+        server_name = request.host
+        app.logger.info(f"Broker Port {request.host} {server_name}")
+        sn_port = None
+        if server_name:
+            sn_host, temp_, sn_port = server_name.partition(":")
+        payload = {"users_list": {"type": result1, "city": result2, "both": result3}, "topic_meta": {
+            'city': city['name'], 'room_type': room_type['type']}, "broker_port": sn_port, "property": p}
+        requests.post(f"http://subscriber:5002/api/notifySubscriber",
+                      json=payload, timeout=600)
         cursor.close()
     connection.close()
     return {"response": "success"}
@@ -93,7 +82,6 @@ def notifyBulk():
             cursor.execute(q3)
             result3 = cursor.fetchall()
             final_tuple = (*final_tuple, *result1, *result3)
-        app.logger.info(f"{final_tuple}")
         informed_user = []
         if len(final_tuple) > 0:
             for user in final_tuple:

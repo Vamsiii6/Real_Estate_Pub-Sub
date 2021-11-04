@@ -201,3 +201,37 @@ def fetchUserDetail(user_id):
         cursor.close()
     connection.close()
     return {"userDetails": results}
+
+
+@app.route("/api/notifySubscriber", methods=["POST"])
+def notifySubscriber():
+    input_json = request.get_json(force=True)
+    app.logger.info(input_json)
+    informed_user = []
+    results_map = input_json["users_list"]
+    topic_meta = input_json["topic_meta"]
+    property_info = input_json["property"]
+    result1 = results_map["type"]
+    result2 = results_map["city"]
+    result3 = results_map["both"]
+    final_tuple = (*result1, *result2, *result3)
+    if len(final_tuple) > 0:
+        for user in final_tuple:
+            if user == property_info['created_by_uid'] or user['uid'] in informed_user:
+                continue
+            payload = {'property': property_info,
+                       'publisher': property_info['created_by_name']}
+            if user in result1:
+                payload['topic_meta'] = {
+                    'city': topic_meta['city'], 'room_type': topic_meta['room_type']}
+            elif user in result2:
+                payload['topic_meta'] = {'city': topic_meta['city']}
+            else:
+                payload['topic_meta'] = {'room_type': topic_meta['room_type']}
+            try:
+                payload["broker"] = input_json["broker_port"]
+                socketio.emit(f"socket-{user['uid']}", payload)
+                informed_user.append(user['uid'])
+            except:
+                app.logger.info(f"{user['uid']} - User not active")
+    return {"success": "done"}

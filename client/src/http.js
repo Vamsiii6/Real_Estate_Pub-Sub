@@ -18,7 +18,7 @@ http.interceptors.request.use(
     return request
   },
   (error) => {
-    return Promise.reject(error)
+    throw error
   }
 )
 
@@ -30,6 +30,8 @@ http.interceptors.response.use(
     // Unauthorized
     if (error.response.status === 401) {
       helper.authLogout()
+    } else {
+      throw error
     }
   }
 )

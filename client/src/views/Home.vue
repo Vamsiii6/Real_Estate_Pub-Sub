@@ -91,6 +91,12 @@
               ><i class="el-icon-refresh"></i> Sync Data from
               API</el-dropdown-item
             >
+            <el-dropdown-item
+              command="brokerSetup"
+              v-if="userDetails.uid == 'VwioudRBkCZFvEyNXmNKK7qHZpy1'"
+              ><i class="el-icon-setting"></i> Setup Broker
+              Topics</el-dropdown-item
+            >
             <el-dropdown-item command="logout"
               ><i class="el-icon-circle-close"></i> Logout</el-dropdown-item
             >
@@ -129,7 +135,7 @@ export default {
       this.$router.push({ name: 'LoginPage' })
     }
     Promise.resolve(this.fetchUser()).then(() => {
-      const socket = io('http://localhost:5001/')
+      const socket = io('http://localhost:5002/')
       if (this.userDetails?.uid) {
         socket.on(`socket-${this.userDetails?.uid}`, (...args) => {
           let message = ``
@@ -149,11 +155,15 @@ export default {
             message += `<br><br>For topic:`
             let city = this.$_.get(args, '[0].topic_meta.city')
             let room_type = this.$_.get(args, '[0].topic_meta.room_type')
+            let broker = this.$_.get(args, '[0].broker')
             if (!this.$_.isEmpty(city)) {
               message += `<br>City: <b>${city}</b>`
             }
             if (!this.$_.isEmpty(room_type)) {
               message += `<br>Room Type: <b>${room_type}</b>`
+            }
+            if (!this.$_.isEmpty(broker)) {
+              message += `<br>Broker: <b>${broker}</b>`
             }
           }
           this.$notify.info({
@@ -172,7 +182,7 @@ export default {
     document.title = 'Real Estate Pub Sub'
   },
   beforeUnmount() {
-    io('http://localhost:5001/').off(`socket-${this.userDetails?.uid}`)
+    io('http://localhost:5002/').off(`socket-${this.userDetails?.uid}`)
   },
   methods: {
     routeToList(type) {
@@ -187,6 +197,9 @@ export default {
     routeToMyAdvs() {
       this.$router.push({ name: 'MyAdvs' })
     },
+    routeToBrokerSetup() {
+      this.$router.push({ name: 'BrokerSetup' })
+    },
     handleDropDownCommand(command) {
       if (command == 'logout') {
         helper.authLogout()
@@ -196,6 +209,8 @@ export default {
         this.routeToMyAdvs()
       } else if (command == 'syncData') {
         this.fetchDatafromAPI()
+      } else if (command == 'brokerSetup') {
+        this.routeToBrokerSetup()
       }
     },
     async fetchDatafromAPI() {

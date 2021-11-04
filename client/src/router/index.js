@@ -1,14 +1,18 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
+    path: '/',
+    name: 'App',
+    component: () => import('src/App.vue'),
+  },
+  {
     path: '/app',
     name: 'Home',
-    component: Home,
+    component: () => import('../views/Home.vue'),
     children: [
       {
         path: 'list/:type',
@@ -30,6 +34,11 @@ const routes = [
         path: 'myadvs',
         name: 'MyAdvs',
         component: () => import('../views/property/ManageAdvertisements.vue'),
+      },
+      {
+        path: 'broker',
+        name: 'BrokerSetup',
+        component: () => import('../views/property/BrokerSetup.vue'),
       },
     ],
   },
