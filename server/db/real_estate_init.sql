@@ -85,14 +85,14 @@ CREATE TABLE `broker_vs_topics` (
   `topic_id` bigint
 );
 
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5005','1');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5005','2');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5005','3');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','4');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','5');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5006','6');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','7');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','8');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5007','9');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5008','1');
-INSERT INTO `broker_vs_topics` (`broker_port`,`type`) VALUES ( '5008','4');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5005','1');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5005','2');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5005','3');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5006','4');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5006','5');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5006','6');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5007','7');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5007','8');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5007','9');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5008','1');
+INSERT INTO `broker_vs_topics` (`broker_port`,`topic_id`) VALUES ( '5008','4');

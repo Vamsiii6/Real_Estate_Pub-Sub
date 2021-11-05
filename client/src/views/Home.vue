@@ -153,7 +153,7 @@ export default {
             )}</b> has added few listings for your topics`
             let broker = this.$_.get(args, '[0].broker')
             if (!this.$_.isEmpty(broker)) {
-              message += `<br>Broker: <b>${broker}</b>`
+              message += `<br>Broker: <b>${brokerVsPort[broker]}</b>`
             }
           } else {
             title = 'New Listing'

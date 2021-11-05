@@ -4,7 +4,7 @@ from pypika import Table, MySQLQuery, Order
 import pymysql.cursors
 from flask_socketio import SocketIO
 import requests
-
+import threading
 # Flask with cors
 app = Flask(__name__)
 CORS(app)
@@ -32,10 +32,9 @@ def getCurrentPort():
 # This is similar to matchlist in rendevous check if the node is responsible for the topic
 
 
-def isResponsibleForTopic(city_id):
+def isResponsibleForTopic(city_id, current_port):
     connection = pymysql.connect(**config)
     with connection.cursor() as cursor:
-        current_port = getCurrentPort()
         bt_table = Table('broker_vs_topics')
         q_b = MySQLQuery.from_(bt_table).select('broker_port').where(
             (bt_table.topic_id == city_id) & (bt_table.broker_port == current_port)).orderby('broker_port', order=Order.asc)
@@ -45,23 +44,38 @@ def isResponsibleForTopic(city_id):
             return True
     return False
 
-# If not responsible for the topic the broker will inform Nearby Broker nodes to check for the match
+# If not responsible for the topic the broker will inform Nearby Responsible Broker nodes to check for the match
 
 
-def informNearByBrokers(payload_):
-    current_port = getCurrentPort()
-    for key in portVsServer:
-        if int(key) <= int(current_port):
-            continue
-        try:
-            res = requests.post(f"http://broker{portVsServer[key]}:{key}/broker/notify",
-                                json=payload_, timeout=600)
-            if res:
-                app.logger.info("Break Loop")
-                break
-        except Exception as err:
-            app.logger.error(f"Warning {err}")
-            pass
+class informResponsibleBrokers(threading.Thread):
+    def __init__(self, name, payload_, current_port):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.payload_ = payload_
+        self.current_port = current_port
+
+    def run(self):
+        connection = pymysql.connect(**config)
+        with connection.cursor() as cursor:
+            bt_table = Table('broker_vs_topics')
+            q_b = MySQLQuery.from_(bt_table).select('broker_port').where(
+                bt_table.topic_id == self.payload_['property']['city_id']).orderby('broker_port', order=Order.asc)
+            cursor.execute(q_b.get_sql())
+            available_brokers = cursor.fetchall()
+            for broker in available_brokers:
+                if int(broker['broker_port']) <= int(self.current_port):
+                    continue
+                try:
+                    res = requests.post(f"http://broker{portVsServer[broker['broker_port']]}:{broker['broker_port']}/broker/notify",
+                                        json=self.payload_, timeout=600)
+                    if res:
+                        app.logger.info("Break Loop")
+                        break
+                except Exception as err:
+                    app.logger.error(f"Warning {err}")
+                    pass
+            cursor.close()
+        connection.close()
 
 
 # Notify users based on subscription for the added property
@@ -71,9 +85,12 @@ def notifyUsers():
     with connection.cursor() as cursor:
         input_json = request.get_json(force=True)
         p = input_json['property']
-        if not isResponsibleForTopic(p['city_id']):
+        current_port = getCurrentPort()
+        if not isResponsibleForTopic(p['city_id'], current_port):
             app.logger.info("Not Responsible broker informing other brokers")
-            informNearByBrokers(input_json)
+            new_thread = informResponsibleBrokers(
+                "inform-broker", input_json, current_port)
+            new_thread.start()
             return {"error": "not responsible for topic"}
         q1 = f"select C.uid from user_cities_rel as C inner join user_room_types_rel as R on R.uid = C.uid  where C.city_id = {p['city_id']} and R.room_type_id = {p['room_type_id']}"
         cursor.execute(q1)
@@ -118,15 +135,17 @@ def notifyBulk():
         q2 = f"select C.uid from user_cities_rel as C where not exists (select R.uid from user_room_types_rel as R where R.uid = C.uid) and C.city_id = {c_id}"
         cursor.execute(q2)
         result2 = cursor.fetchall()
-        final_tuple = (*result2,)
+        result1 = ()
+        result3 = ()
         for r_id in r_ids:
             q1 = f"select C.uid from user_cities_rel as C inner join user_room_types_rel as R on R.uid = C.uid  where C.city_id = {c_id} and R.room_type_id = {r_id}"
             cursor.execute(q1)
-            result1 = cursor.fetchall()
+            r1 = cursor.fetchall()
             q3 = f"select R.uid from user_room_types_rel as R where not exists (select C.uid from user_cities_rel as C where R.uid = C.uid) and R.room_type_id= {r_id}"
             cursor.execute(q3)
-            result3 = cursor.fetchall()
-            final_tuple = (*final_tuple, *result1, *result3)
+            r3 = cursor.fetchall()
+            result1 = (*result1, *r1)
+            result3 = (*result3, *r3)
         server_name = request.host
         sn_port = None
         if server_name:
