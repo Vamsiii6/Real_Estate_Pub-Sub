@@ -117,7 +117,12 @@
 import helper from 'src/mixins/helper'
 import io from 'socket.io-client'
 import { mapState } from 'vuex'
-
+const brokerVsPort = {
+  5005: 'Broker1',
+  5006: 'Broker2',
+  5007: 'Broker3',
+  5008: 'Broker4',
+}
 export default {
   name: 'Home',
   data: () => ({
@@ -167,7 +172,7 @@ export default {
               message += `<br>Room Type: <b>${room_type}</b>`
             }
             if (!this.$_.isEmpty(broker)) {
-              message += `<br>Broker: <b>${broker}</b>`
+              message += `<br>Broker: <b>${brokerVsPort[broker]}</b>`
             }
           }
           this.$notify.info({
@@ -245,7 +250,7 @@ export default {
           this.loading = false
         }
       } catch (error) {
-        this.$message.error(error?.message || 'Server Error')
+        this.$message.info('Kindly login to proceed')
       }
     },
   },

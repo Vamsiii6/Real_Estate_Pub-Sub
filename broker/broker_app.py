@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_cors import CORS
-from pypika import Table, MySQLQuery
+from pypika import Table, MySQLQuery, Order
 import pymysql.cursors
 from flask_socketio import SocketIO
 import requests
@@ -17,6 +17,51 @@ socketio.run(app)
 config = {"host": "db", "user": "root", "password": "root", "database": "ds_project1", "port": 3306,
           "cursorclass": pymysql.cursors.DictCursor}
 app.config['PROPAGATE_EXCEPTIONS'] = False
+portVsServer = {"5005": 1, "5006": 2, "5007": 3,  "5008": 4}
+
+# To get the port of Broker app
+
+
+def getCurrentPort():
+    sn_port = None
+    server_name = request.host
+    if server_name:
+        sn_host, temp_, sn_port = server_name.partition(":")
+    return sn_port
+
+# This is similar to matchlist in rendevous check if the node is responsible for the topic
+
+
+def isResponsibleForTopic(city_id):
+    connection = pymysql.connect(**config)
+    with connection.cursor() as cursor:
+        current_port = getCurrentPort()
+        bt_table = Table('broker_vs_topics')
+        q_b = MySQLQuery.from_(bt_table).select('broker_port').where(
+            (bt_table.topic_id == city_id) & (bt_table.broker_port == current_port)).orderby('broker_port', order=Order.asc)
+        cursor.execute(q_b.get_sql())
+        result = cursor.fetchone()
+        if result is not None and current_port == result['broker_port']:
+            return True
+    return False
+
+# If not responsible for the topic the broker will inform Nearby Broker nodes to check for the match
+
+
+def informNearByBrokers(payload_):
+    current_port = getCurrentPort()
+    for key in portVsServer:
+        if int(key) <= int(current_port):
+            continue
+        try:
+            res = requests.post(f"http://broker{portVsServer[key]}:{key}/broker/notify",
+                                json=payload_, timeout=600)
+            if res:
+                app.logger.info("Break Loop")
+                break
+        except Exception as err:
+            app.logger.error(f"Warning {err}")
+            pass
 
 
 # Notify users based on subscription for the added property
@@ -26,6 +71,10 @@ def notifyUsers():
     with connection.cursor() as cursor:
         input_json = request.get_json(force=True)
         p = input_json['property']
+        if not isResponsibleForTopic(p['city_id']):
+            app.logger.info("Not Responsible broker informing other brokers")
+            informNearByBrokers(input_json)
+            return {"error": "not responsible for topic"}
         q1 = f"select C.uid from user_cities_rel as C inner join user_room_types_rel as R on R.uid = C.uid  where C.city_id = {p['city_id']} and R.room_type_id = {p['room_type_id']}"
         cursor.execute(q1)
         result1 = cursor.fetchall()
@@ -45,10 +94,7 @@ def notifyUsers():
             'type').where(room_type_table.id == p['room_type_id'])
         cursor.execute(q6.get_sql())
         room_type = cursor.fetchone()
-        server_name = request.host
-        sn_port = None
-        if server_name:
-            sn_host, temp_, sn_port = server_name.partition(":")
+        sn_port = getCurrentPort()
         payload = {"users_list": {"type": result1, "city": result2, "both": result3}, "topic_meta": {
             'city': city['name'], 'room_type': room_type['type']}, "broker_port": sn_port, "property": p, "mode": "single"}
         requests.post(f"http://subscriber:5002/api/notifySubscriber",

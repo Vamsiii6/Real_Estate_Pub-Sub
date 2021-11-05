@@ -79,7 +79,7 @@ def fetchAllProperty(user_id):
             city_types = cursor.fetchall()
             city_type_ids = tuple(i['city_id'] for i in city_types)
             if len(room_type_ids) == 0 and len(city_type_ids) == 0:
-                q = q.where(False)
+                q = q.where(properties.id < 0)
             if len(room_type_ids) > 0:
                 q = q.where(properties.room_type_id.isin(room_type_ids))
             if len(city_type_ids) > 0:

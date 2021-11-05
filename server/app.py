@@ -30,24 +30,19 @@ app.config['PROPAGATE_EXCEPTIONS'] = False
 
 
 # Seperate thread to communicate with broker container
-# ports in __init__ has the list equivalent to EN(e)
 class brokerThread(threading.Thread):
-    def __init__(self, name, payload_, url, ports):
+    def __init__(self, name, payload_, url):
         threading.Thread.__init__(self)
         self.name = name
         self.payload_ = payload_
         self.url = url
-        self.ports = ports
 
     def run(self):
         # Inform broker about new event
         portVsServer = {"5005": 1, "5006": 2, "5007": 3,  "5008": 4}
-        if self.ports == None or len(self.ports) == 0:
-            app.logger.error("No Broker available for the topic")
-        for port in self.ports:
+        for key in portVsServer:
             try:
-                current_port = port['broker_port']
-                res = requests.post(f"http://broker{portVsServer[current_port]}:{port['broker_port']}/broker/{self.url}",
+                res = requests.post(f"http://broker{portVsServer[key]}:{key}/broker/{self.url}",
                                     json=self.payload_, timeout=600)
                 if res:
                     app.logger.info("Break Loop")
@@ -103,7 +98,7 @@ def fetchAllProperty(user_id):
             city_types = cursor.fetchall()
             city_type_ids = tuple(i['city_id'] for i in city_types)
             if len(room_type_ids) == 0 and len(city_type_ids) == 0:
-                q = q.where(False)
+                q = q.where(properties.id < 0)
             if len(room_type_ids) > 0:
                 q = q.where(properties.room_type_id.isin(room_type_ids))
             if len(city_type_ids) > 0:
@@ -145,16 +140,11 @@ def createNewProperty(user_id):
         q = MySQLQuery.into(properties).columns(
             'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by_uid', 'created_by_name').insert(insert_val)
         cursor.execute(q.get_sql())
-        bt_table = Table('broker_vs_topics')
-        q_b = MySQLQuery.from_(bt_table).select('broker_port').where(
-            bt_table.topic_id == input_vals['city_id']).orderby('broker_port', order=Order.asc)
-        cursor.execute(q_b.get_sql())
-        available_brokers = cursor.fetchall()
         cursor.close()
     connection.commit()
     connection.close()
     broker_thread = brokerThread(
-        "ds-broker", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}}, "notify", available_brokers)
+        "ds-broker", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}}, "notify")
     broker_thread.start()
 
     return input_vals
@@ -403,14 +393,9 @@ def triggerRapidApi(user_id):
                 cursor.execute(q.get_sql())
                 if not insert_rec['room_type_id'] in inserted_room_types:
                     inserted_room_types.append(insert_rec['room_type_id'])
-        bt_table = Table('broker_vs_topics')
-        q_b = MySQLQuery.from_(bt_table).select('broker_port').where(
-            bt_table.topic_id == 1).orderby('broker_port', order=Order.asc)
-        cursor.execute(q_b.get_sql())
-        available_brokers = cursor.fetchall()
         if len(inserted_room_types) > 0:
             broker_thread = brokerThread(
-                "ds-broker-bulk", {"city_id": 1, "room_types": inserted_room_types, "uid": user_id, "user_name": created_by_name}, "notifyBulk", available_brokers)
+                "ds-broker-bulk", {"city_id": 1, "room_types": inserted_room_types, "uid": user_id, "user_name": created_by_name}, "notifyBulk")
             broker_thread.start()
         cursor.close()
     connection.commit()
