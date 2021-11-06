@@ -78,6 +78,17 @@ class informResponsibleBrokers(threading.Thread):
         connection.close()
 
 
+class informSubcriberNetwork(threading.Thread):
+    def __init__(self, name, payload_):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.payload_ = payload_
+
+    def run(self):
+        requests.post(f"http://subscriber:5002/api/notifySubscriber",
+                      json=self.payload_, timeout=600)
+
+
 # Notify users based on subscription for the added property
 @app.route("/broker/notify", methods=["POST"])
 def notifyUsers():
@@ -114,8 +125,9 @@ def notifyUsers():
         sn_port = getCurrentPort()
         payload = {"users_list": {"type": result1, "city": result2, "both": result3}, "topic_meta": {
             'city': city['name'], 'room_type': room_type['type']}, "broker_port": sn_port, "property": p, "mode": "single"}
-        requests.post(f"http://subscriber:5002/api/notifySubscriber",
-                      json=payload, timeout=600)
+        new_sub_thread = informSubcriberNetwork(
+            "inform-subcriber", payload)
+        new_sub_thread.start()
         cursor.close()
     connection.close()
     return {"response": "success"}
@@ -152,8 +164,9 @@ def notifyBulk():
             sn_host, temp_, sn_port = server_name.partition(":")
         payload = {"users_list": {"type": result1, "city": result2, "both": result3},
                    "publisher": {"uid": uid_, "name": user_name}, "broker_port": sn_port, "mode": "bulk"}
-        requests.post(f"http://subscriber:5002/api/notifySubscriber",
-                      json=payload, timeout=600)
+        new_sub_thread = informSubcriberNetwork(
+            "inform-subcriber", payload)
+        new_sub_thread.start()
         cursor.close()
     connection.close()
     return {"response": "success"}
