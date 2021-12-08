@@ -7,8 +7,6 @@
         justify-between
         property-management-home
         header-bg
-        h-20
-        p-5
       "
     >
       <div v-if="loading"></div>
@@ -60,8 +58,8 @@
           <el-button circle type="primary">
             <InlineSvg
               src="settings"
-              iconClass="icon size-100"
-              class="h-10 w-10"
+              iconClass="icon size-sm"
+              class="h-2 w-2"
             />
           </el-button>
           <el-dropdown-menu slot="dropdown" class="drop-menu-re">
@@ -104,7 +102,7 @@
         </el-dropdown>
       </div>
     </div>
-    <div class="h-sub-container bg-white p-10 overflow-y-scroll">
+    <div class="h-sub-container p-10 overflow-y-scroll">
       <router-view :key="getType" v-if="!loading && remountFlag" />
       <div v-if="loading">
         <el-skeleton :rows="6" animated></el-skeleton>

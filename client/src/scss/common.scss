@@ -1,22 +1,27 @@
 .property-management-home {
+  padding: 15px 20px;
   .hyper-link-1 {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     color: #f3f4f6;
     cursor: pointer;
+    opacity: 0.6;
     &.is-active {
-      color: #f6b43b;
+      opacity: 1;
     }
     &.hover-effect {
       &:hover {
-        color: #f6573b;
+        opacity: 0.4;
       }
     }
+  }
+  .el-button.is-circle {
+    padding: 6px;
   }
 }
 .heading-1 {
   font-weight: bold;
-  font-size: 25px;
+  font-size: 20px;
 }
 .prop-container {
   height: 26rem;
@@ -63,6 +68,10 @@ svg.icon {
   &.size-s {
     height: 10px;
     width: 10px;
+  }
+  &.size-sm {
+    height: 15px;
+    width: 15px;
   }
   &.size-m {
     height: 20px;
@@ -141,11 +150,12 @@ svg.icon {
   }
 }
 .header-bg {
-  background-color: #3f51f4;
+  background-color: #0e4da4;
 }
 
 .h-sub-container {
   height: calc(100vh - 20px);
+  background-color: #fff;
 }
 .custom-transfer-panel {
   .el-transfer-panel {
