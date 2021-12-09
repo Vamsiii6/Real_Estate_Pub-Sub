@@ -7,7 +7,7 @@
       <div class="mt-5">Email<el-input v-model="email"></el-input></div>
       <div class="mt-5">
         Password<el-input
-          @keyup.enter="signInUserWithFirebase"
+          @@keyup.native.enter="signInUserWithFirebase"
           v-model="password"
           show-password
         ></el-input>

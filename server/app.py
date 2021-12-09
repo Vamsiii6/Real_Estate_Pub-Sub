@@ -33,12 +33,12 @@ config = {"host": "db", "user": "root", "password": "root", "database": "ds_proj
 app.config['PROPAGATE_EXCEPTIONS'] = False
 
 producer = KafkaProducer(value_serializer=lambda m: dumps(
-    m).encode('utf-8'), bootstrap_servers=['kafka:9093'])
+    m).encode('utf-8'), bootstrap_servers=['kafka1:9093', 'kafka2:9093', 'kafka2:9093'])
 
 # Seperate thread to communicate with broker container
 
 
-class brokerThread(threading.Thread):
+class kafkaThread(threading.Thread):
     def __init__(self, name, payload_):
         threading.Thread.__init__(self)
         self.name = name
@@ -137,10 +137,15 @@ def createNewProperty(user_id):
         q = MySQLQuery.into(properties).columns(
             'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by_uid', 'created_by_name').insert(insert_val)
         cursor.execute(q.get_sql())
+        city_table = Table('cities')
+        q5 = MySQLQuery.from_(city_table).select(
+            'name').where(city_table.id == input_vals['city_id'])
+        cursor.execute(q5.get_sql())
+        city = cursor.fetchone()
+        broker_thread = kafkaThread(
+            f"{city['name']}", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}, "mode": "single"})
+        broker_thread.start()
         cursor.close()
-    broker_thread = brokerThread(
-        f"{input_vals['city_id']}", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}, "mode": "single"})
-    broker_thread.start()
     connection.commit()
     connection.close()
 
@@ -391,7 +396,7 @@ def triggerRapidApi(user_id):
                 if not insert_rec['room_type_id'] in inserted_room_types:
                     inserted_room_types.append(insert_rec['room_type_id'])
         if len(inserted_room_types) > 0:
-            broker_thread = brokerThread(
+            broker_thread = kafkaThread(
                 '1', {"city_id": 1, "room_types": inserted_room_types, "uid": user_id, "user_name": created_by_name, "mode": "bulk"})
             broker_thread.start()
         cursor.close()
@@ -441,3 +446,13 @@ def getAllBrokerTopics(user_id):
         cursor.close()
     connection.close()
     return {"broker_topics": bt_result}
+
+
+# @app.route("/api/updatePartitions", methods=["GET"])
+# def updatePartitions():
+#     client = KafkaAdminClient(
+#         bootstrap_servers='kafka1:9093', api_version=(0, 2, 7, 1))
+#     rsp = client.create_partitions({
+#         'Buffalo': NewPartitions(4)
+#     })
+#     return {"success": rsp}

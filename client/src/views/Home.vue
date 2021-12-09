@@ -115,12 +115,6 @@
 import helper from 'src/mixins/helper'
 import io from 'socket.io-client'
 import { mapState } from 'vuex'
-const brokerVsPort = {
-  5005: 'Broker1',
-  5006: 'Broker2',
-  5007: 'Broker3',
-  5008: 'Broker4',
-}
 export default {
   name: 'Home',
   data: () => ({
@@ -141,6 +135,7 @@ export default {
       const socket = io('http://localhost:5002/')
       if (this.userDetails?.uid) {
         socket.on(`socket-${this.userDetails?.uid}`, (...args) => {
+          console.log(args)
           let message = ``
           let title = ``
           if (this.$_.get(args, '[0].mode') == 'bulk') {
@@ -149,9 +144,9 @@ export default {
               args,
               '[0].publisher'
             )}</b> has added few listings for your topics`
-            let broker = this.$_.get(args, '[0].broker')
-            if (!this.$_.isEmpty(broker)) {
-              message += `<br>Broker: <b>${brokerVsPort[broker]}</b>`
+            let partition = this.$_.get(args, '[0].partition')
+            if (!this.$_.isEmpty(partition)) {
+              message += `<br>Partition: <b>${partition}</b>`
             }
           } else {
             title = 'New Listing'
@@ -162,15 +157,15 @@ export default {
             message += `<br><br>For topic:`
             let city = this.$_.get(args, '[0].topic_meta.city')
             let room_type = this.$_.get(args, '[0].topic_meta.room_type')
-            let broker = this.$_.get(args, '[0].broker')
+            let partition = this.$_.get(args, '[0].partition')
             if (!this.$_.isEmpty(city)) {
               message += `<br>City: <b>${city}</b>`
             }
             if (!this.$_.isEmpty(room_type)) {
               message += `<br>Room Type: <b>${room_type}</b>`
             }
-            if (!this.$_.isEmpty(broker)) {
-              message += `<br>Broker: <b>${brokerVsPort[broker]}</b>`
+            if (!this.$_.isEmpty(String(partition))) {
+              message += `<br>Partition: <b>${partition}</b>`
             }
           }
           this.$notify.info({

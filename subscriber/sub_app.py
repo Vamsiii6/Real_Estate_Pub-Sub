@@ -23,6 +23,10 @@ app = Flask(__name__)
 CORS(app)
 
 
+socketio = SocketIO(app, cors_allowed_origins='*')
+socketio.run(app)
+
+
 # Connect to MySQL
 mysql_password = os.getenv('SQL_PASSWORD')
 mysql_user = os.getenv('SQL_USER')
@@ -34,13 +38,11 @@ app.config['PROPAGATE_EXCEPTIONS'] = False
 
 
 consumer = KafkaConsumer(
-    'topic_test',
-    bootstrap_servers=['kafka:9093'],
+    bootstrap_servers=['kafka1:9093'],
     auto_offset_reset='earliest',
     enable_auto_commit=True,
     value_deserializer=lambda x: loads(x.decode('utf-8'))
 )
-consumer.subscribe(['1', '2', '3', '4'])
 
 
 # Decorator for API Auth validation using Firebase auth Manager
@@ -223,7 +225,7 @@ def fetchUserDetail(user_id):
 # Web socket emit to client to inform about new events
 
 
-def notifySubscriber(input_json, socketio):
+def notifySubscriber(input_json):
     informed_user = []
     results_map = input_json["users_list"]
     result1 = results_map["type"]
@@ -237,14 +239,14 @@ def notifySubscriber(input_json, socketio):
             if mode == 'bulk':
                 publisher = input_json["publisher"]
                 payload = {
-                    'publisher': publisher['name'], "mode": "bulk"}
+                    'publisher': publisher['name'], "mode": "bulk", "partition": input_json["partition"]}
                 if user == publisher['uid'] or user['uid'] in informed_user:
                     continue
             else:
                 topic_meta = input_json["topic_meta"]
                 property_info = input_json["property"]
                 payload = {'property': property_info,
-                           'publisher': property_info['created_by_name']}
+                           'publisher': property_info['created_by_name'], "partition": input_json["partition"]}
                 if user == property_info['created_by_uid'] or user['uid'] in informed_user:
                     continue
                 if user in result1:
@@ -255,16 +257,15 @@ def notifySubscriber(input_json, socketio):
                 else:
                     payload['topic_meta'] = {
                         'room_type': topic_meta['room_type']}
-            try:
-                payload["broker"] = input_json["broker_port"]
-                socketio.emit(f"socket-{user['uid']}", payload)
-                informed_user.append(user['uid'])
-            except:
-                app.logger.info(f"{user['uid']} - User not active")
+            # try:
+            socketio.emit(f"socket-{user['uid']}", payload)
+            informed_user.append(user['uid'])
+            # except:
+            #     app.logger.info(f"{user['uid']} - User not active")
     return {"success": "done"}
 
 
-def notifyClient(data, socketio):
+def notifyClient(data, partition):
     connection = pymysql.connect(**config)
     with connection.cursor() as cursor:
         payload = {}
@@ -290,7 +291,7 @@ def notifyClient(data, socketio):
             cursor.execute(q6.get_sql())
             room_type = cursor.fetchone()
             payload = {"users_list": {"type": result1, "city": result2, "both": result3}, "topic_meta": {
-                'city': city['name'], 'room_type': room_type['type']}, "property": p, "mode": "single"}
+                'city': city['name'], 'room_type': room_type['type']}, "property": p, "mode": "single", "partition": partition}
         elif data['mode'] == 'bulk':
             c_id = data['city_id']
             r_ids = data['room_types']
@@ -310,13 +311,9 @@ def notifyClient(data, socketio):
                 r3 = cursor.fetchall()
                 result1 = (*result1, *r1)
                 result3 = (*result3, *r3)
-            server_name = request.host
-            sn_port = None
-            if server_name:
-                sn_host, temp_, sn_port = server_name.partition(":")
             payload = {"users_list": {"type": result1, "city": result2, "both": result3},
-                       "publisher": {"uid": uid_, "name": user_name}, "broker_port": sn_port, "mode": "bulk"}
-        notifySubscriber(payload, socketio)
+                       "publisher": {"uid": uid_, "name": user_name}, "mode": "bulk", "partition": partition}
+        notifySubscriber(payload)
         cursor.close()
     connection.close()
     return {"success": data}
@@ -327,14 +324,12 @@ class consumerThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-
-        socketio = SocketIO(app, cors_allowed_origins='*')
-        socketio.run(app)
         # Web socket Initialization
+        consumer.subscribe(['Buffalo', 'Syracuse', 'Albany', 'NYC'])
         for event in consumer:
             app.logger.info(event)
             event_data = event.value
-            notifyClient(event_data, socketio)
+            notifyClient(event_data, event.partition)
 
 
 consumer_thread = consumerThread()
