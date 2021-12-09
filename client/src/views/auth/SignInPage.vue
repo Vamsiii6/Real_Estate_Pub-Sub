@@ -6,10 +6,14 @@
       <div class="title-bold">Login</div>
       <div class="mt-5">Email<el-input v-model="email"></el-input></div>
       <div class="mt-5">
-        Password<el-input v-model="password" show-password></el-input>
+        Password<el-input
+          @keyup.enter="signInUserWithFirebase"
+          v-model="password"
+          show-password
+        ></el-input>
       </div>
       <div class="flex items-center flex-col mt-10">
-        <el-button @click="signInUserWithGoogle" class="login-button"
+        <el-button @click="signInUserWithFirebase" class="login-button"
           >Sign-in</el-button
         >
         <div class="signup-text mt-5" @click="redirectToSignupPage">
@@ -32,7 +36,7 @@ export default {
     }
   },
   methods: {
-    async signInUserWithGoogle() {
+    async signInUserWithFirebase() {
       try {
         let authResponse = await auth.signInWithEmailAndPassword(
           this.email,

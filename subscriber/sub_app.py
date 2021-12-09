@@ -7,6 +7,9 @@ from functools import wraps
 from firebase_admin import credentials, auth
 import pymysql.cursors
 from flask_socketio import SocketIO
+from kafka import KafkaConsumer
+from json import loads
+import threading
 
 # Firebase Instantiation
 if not firebase_admin._apps:
@@ -19,9 +22,6 @@ if not firebase_admin._apps:
 app = Flask(__name__)
 CORS(app)
 
-# Web socket Initialization
-socketio = SocketIO(app, cors_allowed_origins='*')
-socketio.run(app)
 
 # Connect to MySQL
 mysql_password = os.getenv('SQL_PASSWORD')
@@ -33,7 +33,19 @@ config = {"host": "db", "user": "root", "password": "root", "database": "ds_proj
 app.config['PROPAGATE_EXCEPTIONS'] = False
 
 
+consumer = KafkaConsumer(
+    'topic_test',
+    bootstrap_servers=['kafka:9093'],
+    auto_offset_reset='earliest',
+    enable_auto_commit=True,
+    value_deserializer=lambda x: loads(x.decode('utf-8'))
+)
+consumer.subscribe(['1', '2', '3', '4'])
+
+
 # Decorator for API Auth validation using Firebase auth Manager
+
+
 def login_required(func):
     @wraps(func)
     def validate_token(*args, **kwargs):
@@ -211,9 +223,7 @@ def fetchUserDetail(user_id):
 # Web socket emit to client to inform about new events
 
 
-@app.route("/api/notifySubscriber", methods=["POST"])
-def notifySubscriber():
-    input_json = request.get_json(force=True)
+def notifySubscriber(input_json, socketio):
     informed_user = []
     results_map = input_json["users_list"]
     result1 = results_map["type"]
@@ -252,3 +262,80 @@ def notifySubscriber():
             except:
                 app.logger.info(f"{user['uid']} - User not active")
     return {"success": "done"}
+
+
+def notifyClient(data, socketio):
+    connection = pymysql.connect(**config)
+    with connection.cursor() as cursor:
+        payload = {}
+        if data['mode'] == 'single':
+            p = data['property']
+            q1 = f"select C.uid from user_cities_rel as C inner join user_room_types_rel as R on R.uid = C.uid  where C.city_id = {p['city_id']} and R.room_type_id = {p['room_type_id']}"
+            cursor.execute(q1)
+            result1 = cursor.fetchall()
+            q2 = f"select C.uid from user_cities_rel as C where not exists (select R.uid from user_room_types_rel as R where R.uid = C.uid) and C.city_id = {p['city_id']}"
+            cursor.execute(q2)
+            result2 = cursor.fetchall()
+            q3 = f"select R.uid from user_room_types_rel as R where not exists (select C.uid from user_cities_rel as C where R.uid = C.uid) and R.room_type_id= {p['room_type_id']}"
+            cursor.execute(q3)
+            result3 = cursor.fetchall()
+            city_table = Table('cities')
+            q5 = MySQLQuery.from_(city_table).select(
+                'name').where(city_table.id == p['city_id'])
+            cursor.execute(q5.get_sql())
+            city = cursor.fetchone()
+            room_type_table = Table('room_type')
+            q6 = MySQLQuery.from_(room_type_table).select(
+                'type').where(room_type_table.id == p['room_type_id'])
+            cursor.execute(q6.get_sql())
+            room_type = cursor.fetchone()
+            payload = {"users_list": {"type": result1, "city": result2, "both": result3}, "topic_meta": {
+                'city': city['name'], 'room_type': room_type['type']}, "property": p, "mode": "single"}
+        elif data['mode'] == 'bulk':
+            c_id = data['city_id']
+            r_ids = data['room_types']
+            uid_ = data['uid']
+            user_name = data['user_name']
+            q2 = f"select C.uid from user_cities_rel as C where not exists (select R.uid from user_room_types_rel as R where R.uid = C.uid) and C.city_id = {c_id}"
+            cursor.execute(q2)
+            result2 = cursor.fetchall()
+            result1 = ()
+            result3 = ()
+            for r_id in r_ids:
+                q1 = f"select C.uid from user_cities_rel as C inner join user_room_types_rel as R on R.uid = C.uid  where C.city_id = {c_id} and R.room_type_id = {r_id}"
+                cursor.execute(q1)
+                r1 = cursor.fetchall()
+                q3 = f"select R.uid from user_room_types_rel as R where not exists (select C.uid from user_cities_rel as C where R.uid = C.uid) and R.room_type_id= {r_id}"
+                cursor.execute(q3)
+                r3 = cursor.fetchall()
+                result1 = (*result1, *r1)
+                result3 = (*result3, *r3)
+            server_name = request.host
+            sn_port = None
+            if server_name:
+                sn_host, temp_, sn_port = server_name.partition(":")
+            payload = {"users_list": {"type": result1, "city": result2, "both": result3},
+                       "publisher": {"uid": uid_, "name": user_name}, "broker_port": sn_port, "mode": "bulk"}
+        notifySubscriber(payload, socketio)
+        cursor.close()
+    connection.close()
+    return {"success": data}
+
+
+class consumerThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+
+        socketio = SocketIO(app, cors_allowed_origins='*')
+        socketio.run(app)
+        # Web socket Initialization
+        for event in consumer:
+            app.logger.info(event)
+            event_data = event.value
+            notifyClient(event_data, socketio)
+
+
+consumer_thread = consumerThread()
+consumer_thread.start()

@@ -37,11 +37,6 @@ INSERT INTO `cities` (`name`) VALUES ('Buffalo');
 INSERT INTO `cities` (`name`) VALUES ('Syracuse');
 INSERT INTO `cities` (`name`) VALUES ('Albany');
 INSERT INTO `cities` (`name`) VALUES ('NYC');
-INSERT INTO `cities` (`name`) VALUES ('Lancaster');
-INSERT INTO `cities` (`name`) VALUES ('Niagara Falls');
-INSERT INTO `cities` (`name`) VALUES ('Newark');
-INSERT INTO `cities` (`name`) VALUES ('Philadelphia');
-INSERT INTO `cities` (`name`) VALUES ('Boston');
 
 CREATE TABLE `room_type` (
   `id` int PRIMARY KEY AUTO_INCREMENT,

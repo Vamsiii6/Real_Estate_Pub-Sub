@@ -8,6 +8,10 @@ import pymysql.cursors
 from flask_socketio import SocketIO
 import requests
 import threading
+from kafka import KafkaProducer
+from json import dumps
+
+
 # Firebase Instantiation
 if not firebase_admin._apps:
     cred = credentials.Certificate(
@@ -28,28 +32,21 @@ config = {"host": "db", "user": "root", "password": "root", "database": "ds_proj
           "cursorclass": pymysql.cursors.DictCursor}
 app.config['PROPAGATE_EXCEPTIONS'] = False
 
+producer = KafkaProducer(value_serializer=lambda m: dumps(
+    m).encode('utf-8'), bootstrap_servers=['kafka:9093'])
 
 # Seperate thread to communicate with broker container
+
+
 class brokerThread(threading.Thread):
-    def __init__(self, name, payload_, url):
+    def __init__(self, name, payload_):
         threading.Thread.__init__(self)
         self.name = name
         self.payload_ = payload_
-        self.url = url
 
     def run(self):
         # Inform broker about new event
-        portVsServer = {"5005": 1, "5006": 2, "5007": 3,  "5008": 4}
-        for key in portVsServer:
-            try:
-                res = requests.post(f"http://broker{portVsServer[key]}:{key}/broker/{self.url}",
-                                    json=self.payload_, timeout=600)
-                if res:
-                    app.logger.info("Break Loop")
-                    break
-            except Exception as err:
-                app.logger.error(f"Warning {err}")
-                pass
+        producer.send(self.name, self.payload_)
 
 
 # Decorator for API Auth validation using Firebase auth manager
@@ -141,11 +138,11 @@ def createNewProperty(user_id):
             'name', 'description', 'price', 'city_id', 'room_type_id', 'created_by_uid', 'created_by_name').insert(insert_val)
         cursor.execute(q.get_sql())
         cursor.close()
+    broker_thread = brokerThread(
+        f"{input_vals['city_id']}", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}, "mode": "single"})
+    broker_thread.start()
     connection.commit()
     connection.close()
-    broker_thread = brokerThread(
-        "ds-broker", {"property": {**input_vals, "created_by_uid": user_id, "created_by_name": created_by_name}}, "notify")
-    broker_thread.start()
 
     return input_vals
 
@@ -395,7 +392,7 @@ def triggerRapidApi(user_id):
                     inserted_room_types.append(insert_rec['room_type_id'])
         if len(inserted_room_types) > 0:
             broker_thread = brokerThread(
-                "ds-broker-bulk", {"city_id": 1, "room_types": inserted_room_types, "uid": user_id, "user_name": created_by_name}, "notifyBulk")
+                '1', {"city_id": 1, "room_types": inserted_room_types, "uid": user_id, "user_name": created_by_name, "mode": "bulk"})
             broker_thread.start()
         cursor.close()
     connection.commit()
