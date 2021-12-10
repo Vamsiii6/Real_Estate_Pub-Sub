@@ -16,8 +16,7 @@ services:
       - subscriber
     ports:
       - "8080:8080"
-
-    volumes: ["./client:/src"]
+    # volumes: ["./client:/src"]
     command: ["npm", "run", "serve"]
   zookeeper:
     image: zookeeper
@@ -71,7 +70,7 @@ services:
     environment:
       FLASK_DEBUG: 1
       FLASK_APP: ./app.py
-    volumes: ["./server:/app"]
+    # volumes: ["./server:/app"]
     restart: unless-stopped
     command: ["flask", "run", "--host=0.0.0.0"]
   subscriber:
@@ -84,6 +83,6 @@ services:
     environment:
       FLASK_DEBUG: 1
       FLASK_APP: ./sub_app.py
-    volumes: ["./subscriber:/subscriber"]
+    # volumes: ["./subscriber:/subscriber"]
     restart: unless-stopped
     command: ["flask", "run", "--host=0.0.0.0", "--port=5002"]

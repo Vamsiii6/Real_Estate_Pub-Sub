@@ -1,3 +1,4 @@
+from sys import flags
 from flask import Flask, request, abort
 from flask_cors import CORS
 import os
@@ -142,18 +143,28 @@ class consumerThread(threading.Thread):
 
     def run(self):
         # Web socket Initialization
-        sleep(60)
-        consumer = KafkaConsumer(
-            bootstrap_servers=['kafka1:9093', 'kafka2:9093', 'kafka3:9093'],
-            auto_offset_reset='earliest',
-            enable_auto_commit=True,
-            value_deserializer=lambda x: loads(x.decode('utf-8'))
-        )
-        consumer.subscribe(['Buffalo', 'Syracuse', 'Albany', 'NYC'])
-        for event in consumer:
-            app.logger.info(event)
-            event_data = event.value
-            notifyClient(event_data, event.partition)
+
+        app.logger.info('Kafka consumer')
+        sleep(30)
+        try:
+            consumer = KafkaConsumer(
+                bootstrap_servers=['kafka1:9093',
+                                   'kafka2:9093', 'kafka3:9093'],
+                auto_offset_reset='earliest',
+                enable_auto_commit=True,
+                value_deserializer=lambda x: loads(x.decode('utf-8'))
+            )
+            app.logger.info('Kafka consumer initialized')
+            consumer.subscribe(['Buffalo', 'Syracuse', 'Albany', 'NYC'])
+            app.logger.info('Kafka consumer subscribed')
+            for event in consumer:
+                app.logger.info(event)
+                event_data = event.value
+                notifyClient(event_data, event.partition)
+        except:
+            app.logger.info("Failed to initialize consumer")
+            consumer_thread = consumerThread()
+            consumer_thread.start()
 
 
 @app.route("/api/initializeKafka", methods=["GET"])
@@ -161,7 +172,7 @@ def initializeKafka():
 
     app.logger.info('Init Kafka')
     admin_client = KafkaAdminClient(
-        bootstrap_servers=['kafka1:9093', 'kafka2:9093', 'kafka3:9093'],
+        bootstrap_servers='kafka1:9093',
         client_id='test'
     )
     app.logger.info('Admin connected')

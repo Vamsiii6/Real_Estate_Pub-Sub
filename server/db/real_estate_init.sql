@@ -13,6 +13,11 @@ CREATE TABLE `users` (
 insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Admin', 'admin@rps.com', 'Admin', '6', 'VwioudRBkCZFvEyNXmNKK7qHZpy1');
 insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Publisher 1', 'publisher1@rps.com', 'Publisher 1', '2', 'IOxyt7H2ytMouuekKiKELoykGKH2');
 insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 1', 'subscriber1@rps.com', 'Subscriber 1', '4', 'XJxTONpve7hwXPz90pmMq7HAEFz1');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 2', 'subscriber2@rps.com', 'Subscriber 2', '4', 'IiagWPMXnQNFsPErdDzESv4Tr5p1');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 3', 'subscriber3@rps.com', 'Subscriber 3', '4', 'qovOHkTmOfTTaNGElnMLNYUpgmJ3');
+-- insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 4', 'subscriber4@rps.com', 'Subscriber 4', '4', 'XJxTONpve7hwXPz90pmMq7HAEFz1');
+-- insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 5', 'subscriber5@rps.com', 'Subscriber 5', '4', 'XJxTONpve7hwXPz90pmMq7HAEFz1');
+
 
 CREATE TABLE `properties` (
   `id` int PRIMARY KEY AUTO_INCREMENT,

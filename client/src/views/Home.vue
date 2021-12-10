@@ -202,6 +202,7 @@ export default {
     async routeToBrokerSetup() {
       try {
         await this.$axios.get(`http://localhost:5002/api/initializeKafka`)
+        this.$message.success('Topics initialized')
       } catch (error) {
         this.$message.error(error?.message || 'Server Error')
       }
