@@ -10,6 +10,7 @@ import requests
 import threading
 from kafka import KafkaProducer
 from json import dumps
+from time import sleep
 
 
 # Firebase Instantiation
@@ -32,8 +33,9 @@ config = {"host": "db", "user": "root", "password": "root", "database": "ds_proj
           "cursorclass": pymysql.cursors.DictCursor}
 app.config['PROPAGATE_EXCEPTIONS'] = False
 
+sleep(30)
 producer = KafkaProducer(value_serializer=lambda m: dumps(
-    m).encode('utf-8'), bootstrap_servers=['kafka1:9093', 'kafka2:9093', 'kafka2:9093'])
+    m).encode('utf-8'), bootstrap_servers=['kafka1:9093', 'kafka2:9093', 'kafka3:9093'])
 
 # Seperate thread to communicate with broker container
 
@@ -446,13 +448,3 @@ def getAllBrokerTopics(user_id):
         cursor.close()
     connection.close()
     return {"broker_topics": bt_result}
-
-
-# @app.route("/api/updatePartitions", methods=["GET"])
-# def updatePartitions():
-#     client = KafkaAdminClient(
-#         bootstrap_servers='kafka1:9093', api_version=(0, 2, 7, 1))
-#     rsp = client.create_partitions({
-#         'Buffalo': NewPartitions(4)
-#     })
-#     return {"success": rsp}

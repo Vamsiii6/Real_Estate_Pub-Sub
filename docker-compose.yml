@@ -27,43 +27,40 @@ services:
       - "2181:2181"
   kafka1:
     image:  wurstmeister/kafka
-    restart: unless-stopped
     ports:
-      - "9092"
+      - "19092:19092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka1:9093,OUTSIDE://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka1:9093,OUTSIDE://localhost:19092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:19092
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_CREATE_TOPICS: "Buffalo:4:1,Syracuse:4:1,NYC:4:1,Albany:1:1"
-  # kafka2:
-  #   image:  wurstmeister/kafka
-  #   restart: unless-stopped
-  #   ports:
-  #     - "9092"
-  #   environment:
-  #     KAFKA_BROKER_ID: 2
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #     KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka2:9093,OUTSIDE://localhost:9092
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-  #     KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-  #     KAFKA_CREATE_TOPICS: "Buffalo:4:3,Syracuse:4:3,NYC:4:3,Albany:1:1"
-  # kafka3:
-  #   image:  wurstmeister/kafka
-  #   restart: unless-stopped
-  #   ports:
-  #     - "9092"
-  #   environment:
-  #     KAFKA_BROKER_ID: 3
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #     KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka3:9093,OUTSIDE://localhost:9092
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-  #     KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-  #     KAFKA_CREATE_TOPICS: "Buffalo:4:3,Syracuse:4:3,NYC:4:3,Albany:1:1"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  kafka2:
+    image:  wurstmeister/kafka
+    ports:
+      - "29092"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka2:9093,OUTSIDE://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  kafka3:
+    image:  wurstmeister/kafka
+    ports:
+      - "39092"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka3:9093,OUTSIDE://localhost:39092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:39092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
   publisher:
     build: ./server
     depends_on: 

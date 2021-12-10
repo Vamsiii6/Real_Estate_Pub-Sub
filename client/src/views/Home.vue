@@ -92,7 +92,7 @@
             <el-dropdown-item
               command="brokerSetup"
               v-if="userDetails.uid == 'VwioudRBkCZFvEyNXmNKK7qHZpy1'"
-              ><i class="el-icon-setting"></i> Setup Broker
+              ><i class="el-icon-setting"></i> Setup Kafka Broker
               Topics</el-dropdown-item
             >
             <el-dropdown-item command="logout"
@@ -144,10 +144,10 @@ export default {
               args,
               '[0].publisher'
             )}</b> has added few listings for your topics`
-            let partition = this.$_.get(args, '[0].partition')
-            if (!this.$_.isEmpty(partition)) {
-              message += `<br>Partition: <b>${partition}</b>`
-            }
+            // let partition = this.$_.get(args, '[0].partition')
+            // if (!this.$_.isEmpty(partition)) {
+            //   message += `<br>Partition: <b>${partition}</b>`
+            // }
           } else {
             title = 'New Listing'
             message = `Property <b>${this.$_.get(
@@ -199,8 +199,12 @@ export default {
     routeToMyAdvs() {
       this.$router.push({ name: 'MyAdvs' })
     },
-    routeToBrokerSetup() {
-      this.$router.push({ name: 'BrokerSetup' })
+    async routeToBrokerSetup() {
+      try {
+        await this.$axios.get(`http://localhost:5002/api/initializeKafka`)
+      } catch (error) {
+        this.$message.error(error?.message || 'Server Error')
+      }
     },
     handleDropDownCommand(command) {
       if (command == 'logout') {
