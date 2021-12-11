@@ -15,8 +15,13 @@ insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Publishe
 insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 1', 'subscriber1@rps.com', 'Subscriber 1', '4', 'XJxTONpve7hwXPz90pmMq7HAEFz1');
 insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 2', 'subscriber2@rps.com', 'Subscriber 2', '4', 'IiagWPMXnQNFsPErdDzESv4Tr5p1');
 insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 3', 'subscriber3@rps.com', 'Subscriber 3', '4', 'qovOHkTmOfTTaNGElnMLNYUpgmJ3');
--- insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 4', 'subscriber4@rps.com', 'Subscriber 4', '4', 'XJxTONpve7hwXPz90pmMq7HAEFz1');
--- insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 5', 'subscriber5@rps.com', 'Subscriber 5', '4', 'XJxTONpve7hwXPz90pmMq7HAEFz1');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 4', 'subscriber4@rps.com', 'Subscriber 4', '4', 'ybIClJEidkX8m2jnDwFTPDZbkd13');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 5', 'subscriber5@rps.com', 'Subscriber 5', '4', 'dpgTThbmcPYyDvlTYzxXw1b6qfn1');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 6', 'subscriber6@rps.com', 'Subscriber 6', '4', '2usQuLfuyXTN7G5CD8g2mBergFz1');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 7', 'subscriber7@rps.com', 'Subscriber 7', '4', 'EJLENx1mLdYL6D57PuAa9uwxuZO2');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 8', 'subscriber8@rps.com', 'Subscriber 8', '4', 'JXGbmHXn7PVMchr6lKQzCm9yhps2');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 9', 'subscriber9@rps.com', 'Subscriber 9', '4', 'zG9hFb7oeeZ0jFaVZY979LlFU9X2');
+insert into `users` (`name`, `email`, `phone`, `roles`, `uid`) VALUES ('Subscriber 10', 'subscriber10@rps.com', 'Subscriber 10', '4', 'GgoI3wGruveZxfjB7nkbQHjwJyG2');
 
 
 CREATE TABLE `properties` (
